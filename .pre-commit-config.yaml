@@ -39,3 +39,10 @@ repos:
           "-sn", # Don't display the score
           "--rcfile=python/.pylintrc"
         ]
+- repo: https://github.com/pocc/pre-commit-hooks
+  rev: v1.3.5
+  hooks:
+    - id: clang-format
+      args: ["-i", "--style=file:src/.clang-format"]
+      language: python
+      additional_dependencies: [clang-format>=15.0]
