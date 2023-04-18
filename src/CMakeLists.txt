@@ -75,11 +75,13 @@ set_target_properties(obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common
 
 target_sources(obj_tl2cgen
     PRIVATE
-    c_api/c_api.cc)
+    c_api/c_api.cc
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api.h)
 
 target_sources(obj_tl2cgen_runtime
     PRIVATE
-    c_api/c_api_runtime.cc)
+    c_api/c_api_runtime.cc
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_runtime.h)
 
 target_sources(obj_tl2cgen_common
     PRIVATE
