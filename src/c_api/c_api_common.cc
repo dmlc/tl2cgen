@@ -12,14 +12,14 @@
 
 using namespace tl2cgen;  // NOLINT(build/namespaces)
 
-int TL2cgenRegisterLogCallback(void (*callback)(const char*)) {
+int TL2cgenRegisterLogCallback(void (*callback)(char const*)) {
   API_BEGIN();
   LogCallbackRegistry* registry = LogCallbackRegistryStore::Get();
   registry->RegisterCallBackLogInfo(callback);
   API_END();
 }
 
-int TL2cgenRegisterWarningCallback(void (*callback)(const char*)) {
+int TL2cgenRegisterWarningCallback(void (*callback)(char const*)) {
   API_BEGIN();
   LogCallbackRegistry* registry = LogCallbackRegistryStore::Get();
   registry->RegisterCallBackLogWarning(callback);

@@ -20,7 +20,7 @@
 namespace tl2cgen {
 
 template <typename X, typename Y>
-std::unique_ptr<std::string> LogCheckFormat(const X& x, const Y& y) {
+std::unique_ptr<std::string> LogCheckFormat(X const& x, Y const& y) {
   std::ostringstream os;
   os << " (" << x << " vs. " << y << ") ";
   /* CHECK_XX(x, y) requires x and y can be serialized to string. Use CHECK(x OP y) otherwise. */
@@ -83,7 +83,7 @@ class DateLogger {
     _tzset();
 #endif  // defined(_MSC_VER)
   }
-  const char* HumanDate() {
+  char const* HumanDate() {
 #if defined(_MSC_VER)
     _strtime_s(buffer_, sizeof(buffer_));
 #else  // defined(_MSC_VER)
@@ -107,11 +107,11 @@ class DateLogger {
 
 class LogMessageFatal {
  public:
-  LogMessageFatal(const char* file, int line) {
+  LogMessageFatal(char const* file, int line) {
     log_stream_ << "[" << pretty_date_.HumanDate() << "] " << file << ":" << line << ": ";
   }
-  LogMessageFatal(const LogMessageFatal&) = delete;
-  void operator=(const LogMessageFatal&) = delete;
+  LogMessageFatal(LogMessageFatal const&) = delete;
+  void operator=(LogMessageFatal const&) = delete;
 
   std::ostringstream& stream() {
     return log_stream_;
@@ -127,7 +127,7 @@ class LogMessageFatal {
 
 class LogMessage {
  public:
-  LogMessage(const char* file, int line) {
+  LogMessage(char const* file, int line) {
     log_stream_ << "[" << DateLogger().HumanDate() << "] " << file << ":" << line << ": ";
   }
   ~LogMessage() {
@@ -136,7 +136,7 @@ class LogMessage {
   std::ostream& stream() {
     return log_stream_;
   }
-  static void Log(const std::string& msg);
+  static void Log(std::string const& msg);
 
  private:
   std::ostringstream log_stream_;
@@ -144,7 +144,7 @@ class LogMessage {
 
 class LogMessageWarning {
  public:
-  LogMessageWarning(const char* file, int line) {
+  LogMessageWarning(char const* file, int line) {
     log_stream_ << "[" << DateLogger().HumanDate() << "] " << file << ":" << line << ": ";
   }
   ~LogMessageWarning() {
@@ -153,7 +153,7 @@ class LogMessageWarning {
   std::ostream& stream() {
     return log_stream_;
   }
-  static void Log(const std::string& msg);
+  static void Log(std::string const& msg);
 
  private:
   std::ostringstream log_stream_;
@@ -161,10 +161,10 @@ class LogMessageWarning {
 
 class LogCallbackRegistry {
  public:
-  using Callback = void (*)(const char*);
+  using Callback = void (*)(char const*);
   LogCallbackRegistry()
-      : log_callback_info_([](const char* msg) { std::cerr << msg << std::endl; }),
-        log_callback_warn_([](const char* msg) { std::cerr << msg << std::endl; }) {}
+      : log_callback_info_([](char const* msg) { std::cerr << msg << std::endl; }),
+        log_callback_warn_([](char const* msg) { std::cerr << msg << std::endl; }) {}
   inline void RegisterCallBackLogInfo(Callback log_callback) {
     this->log_callback_info_ = log_callback;
   }

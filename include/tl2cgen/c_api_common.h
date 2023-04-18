@@ -34,7 +34,7 @@ typedef void* TL2cgenDMatrixHandle;
  * Note. Each thread will get the last error occurred in its own context.
  * \return error string
  */
-TL2CGEN_DLL const char* TL2cgenGetLastError(void);
+TL2CGEN_DLL char const* TL2cgenGetLastError(void);
 
 /*!
  * \brief Register callback function for LOG(INFO) messages -- helpful messages
@@ -43,7 +43,7 @@ TL2CGEN_DLL const char* TL2cgenGetLastError(void);
  *       will run on the thread that registered it
  * \return 0 for success, -1 for failure
  */
-TL2CGEN_DLL int TL2cgenRegisterLogCallback(void (*callback)(const char*));
+TL2CGEN_DLL int TL2cgenRegisterLogCallback(void (*callback)(char const*));
 
 /*!
  * \brief Register callback function for LOG(WARNING) messages
@@ -51,20 +51,20 @@ TL2CGEN_DLL int TL2cgenRegisterLogCallback(void (*callback)(const char*));
  *       will run on the thread that registered it
  * \return 0 for success, -1 for failure
  */
-TL2CGEN_DLL int TL2cgenRegisterWarningCallback(void (*callback)(const char*));
+TL2CGEN_DLL int TL2cgenRegisterWarningCallback(void (*callback)(char const*));
 
 /*!
  * \brief Get the version string for the TL2cgen library.
  * \return version string, of form MAJOR.MINOR.PATCH
  */
-TL2CGEN_DLL const char* TL2cgenQueryTL2cgenVersion(void);
+TL2CGEN_DLL char const* TL2cgenQueryTL2cgenVersion(void);
 
 #ifdef __cplusplus
 extern "C" {
-extern const char* TREELITE_VERSION;
+extern char const* TREELITE_VERSION;
 }
 #else
-extern const char* TREELITE_VERSION;
+extern char const* TREELITE_VERSION;
 #endif
 
 #endif  // TL2CGEN_C_API_COMMON_H_

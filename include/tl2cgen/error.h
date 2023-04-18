@@ -16,7 +16,7 @@ namespace tl2cgen {
  * \brief Exception class that will be thrown by TL2cgen
  */
 struct Error : public std::runtime_error {
-  explicit Error(const std::string& s) : std::runtime_error(s) {}
+  explicit Error(std::string const& s) : std::runtime_error(s) {}
 };
 
 }  // namespace tl2cgen

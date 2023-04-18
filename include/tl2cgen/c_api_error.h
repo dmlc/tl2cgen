@@ -38,13 +38,13 @@
  * \brief Set the last error message needed by C API
  * \param msg The error message to set.
  */
-void TL2cgenAPISetLastError(const char* msg);
+void TL2cgenAPISetLastError(char const* msg);
 /*!
  * \brief handle exception thrown out
  * \param e the exception
  * \return the return value of API after exception is handled
  */
-inline int TL2cgenAPIHandleException(const std::exception& e) {
+inline int TL2cgenAPIHandleException(std::exception const& e) {
   TL2cgenAPISetLastError(e.what());
   return -1;
 }
