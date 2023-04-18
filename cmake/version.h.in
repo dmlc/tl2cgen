@@ -1,0 +1,11 @@
+/*!
+ * Copyright (c) 2023 by Contributors
+ */
+#ifndef TL2CGEN_VERSION_CONFIG_H_
+#define TL2CGEN_VERSION_CONFIG_H_
+
+#define TL2CGEN_VER_MAJOR @tl2cgen_VERSION_MAJOR@
+#define TL2CGEN_VER_MINOR @tl2cgen_VERSION_MINOR@
+#define TL2CGEN_VER_PATCH @tl2cgen_VERSION_PATCH@
+
+#endif  // TL2CGEN_VERSION_CONFIG_H_
