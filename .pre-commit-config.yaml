@@ -46,3 +46,7 @@ repos:
       args: ["-i", "--style=file:src/.clang-format"]
       language: python
       additional_dependencies: [clang-format>=15.0]
+    - id: cpplint
+      language: python
+      args: ["--linelength=100", "--recursive"]
+      additional_dependencies: [cpplint]

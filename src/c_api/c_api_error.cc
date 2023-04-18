@@ -1,3 +1,6 @@
-//
-// Created by noble on 4/17/2023.
-//
+/*!
+ * Copyright (c) 2023 by Contributors
+ * \file c_api_error.cc
+ * \author Hyunsu Cho
+ * \brief C error handling
+ */

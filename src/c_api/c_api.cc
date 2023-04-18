@@ -1,3 +1,6 @@
-//
-// Created by noble on 4/17/2023.
-//
+/*!
+ * Copyright (c) 2023 by Contributors
+ * \file c_api.cc
+ * \author Hyunsu Cho
+ * \brief C API of tl2cgen, main package
+ */
