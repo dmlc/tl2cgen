@@ -1,5 +1,8 @@
 include(FetchContent)
 
+# Treelite
+find_package(Treelite 3.2.0 REQUIRED)
+
 # fmtlib
 find_package(fmt)
 if (fmt_FOUND)
@@ -41,6 +44,10 @@ if (BUILD_CPP_TESTS)
   find_package(GTest 1.11.0 CONFIG)
   if (NOT GTEST_FOUND)
     message(STATUS "Did not find Google Test in the system root. Fetching Google Test now...")
+    if (MSVC AND (FORCE_SHARED_CRT OR (NOT DEFINED BUILD_SHARED_LIBS) OR BUILD_SHARED_LIBS))
+      message(STATUS "Building gtest with /MD option...")
+      set(gtest_force_shared_crt ON)
+    endif()
     FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git

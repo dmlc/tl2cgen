@@ -4,3 +4,43 @@
  * \author Hyunsu Cho
  * \brief C error handling
  */
+#include <tl2cgen/c_api_error.h>
+#include <tl2cgen/thread_local.h>
+#include <tl2cgen/version.h>
+
+#include <sstream>
+#include <string>
+
+// Stringify an integer macro constant
+#define STR_IMPL_(x) #x
+#define STR(x) STR_IMPL_(x)
+
+namespace {
+
+struct TL2cgenAPIErrorEntry {
+  std::string last_error;
+  std::string version_str;
+};
+
+using TL2cgenAPIErrorStore = tl2cgen::ThreadLocalStore<TL2cgenAPIErrorEntry>;
+
+}  // anonymous namespace
+
+const char* TL2cgenGetLastError() {
+  return TL2cgenAPIErrorStore::Get()->last_error.c_str();
+}
+
+void TL2cgenAPISetLastError(const char* msg) {
+  TL2cgenAPIErrorStore::Get()->last_error = msg;
+}
+
+const char* TL2cgenQueryTL2cgenVersion() {
+  std::ostringstream oss;
+  oss << TL2CGEN_VER_MAJOR << "." << TL2CGEN_VER_MINOR << "." << TL2CGEN_VER_PATCH;
+  std::string& version_str = TL2cgenAPIErrorStore::Get()->version_str;
+  version_str = oss.str();
+  return version_str.c_str();
+}
+
+const char* TL2CGEN_VERSION = "TL2CGEN_VERSION_" STR(TREELITE_VER_MAJOR) "." STR(
+    TREELITE_VER_MINOR) "." STR(TREELITE_VER_PATCH);

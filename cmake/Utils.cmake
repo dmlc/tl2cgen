@@ -14,7 +14,9 @@ endfunction(auto_source_group)
 
 # Force static runtime for MSVC
 function(msvc_use_static_runtime)
-  if (MSVC AND (NOT BUILD_SHARED_LIBS) AND (NOT FORCE_SHARED_CRT))
+  if (MSVC AND ((DEFINED BUILD_SHARED_LIBS) AND (NOT BUILD_SHARED_LIBS)) AND
+      (NOT FORCE_SHARED_CRT))
+    message(STATUS "Building TL2cgen with /MT option...")
     set(variables
         CMAKE_CXX_FLAGS_DEBUG
         CMAKE_CXX_FLAGS_MINSIZEREL
@@ -26,6 +28,8 @@ function(msvc_use_static_runtime)
         set(${variable} "${${variable}}" PARENT_SCOPE)
       endif ()
     endforeach ()
+  else ()
+    message(STATUS "Building TL2cgen with /MD option...")
   endif ()
 endfunction(msvc_use_static_runtime)
 
