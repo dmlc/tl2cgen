@@ -1,0 +1,28 @@
+[MAIN]
+extension-pkg-allow-list=numpy
+
+load-plugins=pylint.extensions.no_self_use,pylint.extensions.docparams
+
+dummy-variables-rgx=(unused|)_.*
+
+[BASIC]
+
+# Enforce naming convention
+const-naming-style=UPPER_CASE
+class-naming-style=PascalCase
+function-naming-style=snake_case
+method-naming-style=snake_case
+attr-naming-style=snake_case
+argument-naming-style=snake_case
+variable-naming-style=snake_case
+class-attribute-naming-style=snake_case
+
+# Allow single-letter variables
+variable-rgx=[a-zA-Z_][a-z0-9_]{0,30}$
+
+[TYPECHECK]
+generated-members=np.float32,np.uintc,np.uintp,np.uint32
+
+[MESSAGES CONTROL]
+# globally disable pylint checks (comma separated)
+disable=fixme,too-few-public-methods,too-many-instance-attributes
