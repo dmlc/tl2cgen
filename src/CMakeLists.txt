@@ -85,6 +85,7 @@ target_sources(obj_tl2cgen_common
     PRIVATE
     c_api/c_api_common.cc
     c_api/c_api_error.cc
+    logging.cc
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_common.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_error.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/error.h
