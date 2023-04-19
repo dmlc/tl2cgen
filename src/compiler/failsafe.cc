@@ -243,7 +243,6 @@ class FailSafeCompilerImpl {
     auto const& model = dynamic_cast<treelite::ModelImpl<float, float> const&>(model_ptr);
 
     CompiledModel cm;
-    cm.backend = "native";
 
     num_feature_ = model.num_feature;
     num_class_ = model.task_param.num_class;

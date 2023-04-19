@@ -78,6 +78,7 @@ target_sources(obj_tl2cgen
     annotator.cc
     filesystem.cc
     c_api/c_api.cc
+    compiler/ast_native.cc
     compiler/compiler.cc
     compiler/elf_formatter.cc
     compiler/failsafe.cc
@@ -95,6 +96,8 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/elf_formatter.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/failsafe.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/pred_transform.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast/ast.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast/builder.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/header_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/main_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/pred_transform.h

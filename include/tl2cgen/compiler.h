@@ -43,7 +43,6 @@ struct CompiledModel {
     FileEntry& operator=(FileEntry const& other) = delete;
     FileEntry& operator=(FileEntry&& other) = default;
   };
-  std::string backend;
   std::unordered_map<std::string, FileEntry> files;
   std::string file_prefix;
 };
