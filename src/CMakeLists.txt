@@ -79,6 +79,12 @@ target_sources(obj_tl2cgen
     filesystem.cc
     c_api/c_api.cc
     compiler/compiler.cc
+    compiler/elf_formatter.cc
+    compiler/failsafe.cc
+    compiler/pred_transform.cc
+    compiler/templates/header_template.cc
+    compiler/templates/main_template.cc
+    compiler/templates/pred_transform.cc
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/annotator.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/compiler.h
@@ -86,7 +92,14 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/filesystem.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/math_funcs.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast_native.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/elf_formatter.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/failsafe.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/pred_transform.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/header_template.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/main_template.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/pred_transform.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/typeinfo.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/util/format_util.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_exception.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_funcs.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/parallel_for.h)
