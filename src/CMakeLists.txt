@@ -75,8 +75,16 @@ set_target_properties(obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common
 
 target_sources(obj_tl2cgen
     PRIVATE
+    annotator.cc
     c_api/c_api.cc
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api.h)
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/annotator.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/math_funcs.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_exception.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_funcs.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/parallel_for.h)
+
+target_link_libraries(obj_tl2cgen PRIVATE treelite::treelite)
 
 target_sources(obj_tl2cgen_runtime
     PRIVATE
@@ -85,11 +93,12 @@ target_sources(obj_tl2cgen_runtime
 
 target_sources(obj_tl2cgen_common
     PRIVATE
+    logging.cc
     c_api/c_api_common.cc
     c_api/c_api_error.cc
-    logging.cc
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_common.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_error.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/error.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/logging.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/thread_local.h)

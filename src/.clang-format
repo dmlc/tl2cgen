@@ -36,6 +36,7 @@ Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 IndentWrappedFunctionNames: false
 InsertBraces: true
+IndentCaseLabels: false
 KeepEmptyLinesAtTheStartOfBlocks: false
 NamespaceIndentation: None
 PointerAlignment: Left

@@ -48,7 +48,8 @@ repos:
       additional_dependencies: [clang-format>=15.0]
     - id: cpplint
       language: python
-      args: ["--linelength=100", "--recursive",
-             "--filter=+build/include_what_you_use,+build/include_order",
-             "--root=include"]
+      args: [
+        "--linelength=100", "--recursive",
+        "--filter=-build/c++11,-build/include,+build/include_what_you_use,+build/include_order",
+        "--root=include"]
       additional_dependencies: [cpplint]

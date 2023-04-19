@@ -12,7 +12,7 @@
 #ifndef TL2CGEN_C_API_H_
 #define TL2CGEN_C_API_H_
 
-#include "./c_api_common.h"
+#include <tl2cgen/c_api_common.h>
 
 /*!
  * \addtogroup opaque_handles
