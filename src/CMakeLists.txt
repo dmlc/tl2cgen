@@ -76,10 +76,17 @@ set_target_properties(obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common
 target_sources(obj_tl2cgen
     PRIVATE
     annotator.cc
+    filesystem.cc
     c_api/c_api.cc
+    compiler/compiler.cc
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/annotator.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/compiler.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/compiler_param.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/filesystem.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/math_funcs.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast_native.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/failsafe.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_exception.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_funcs.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/parallel_for.h)
