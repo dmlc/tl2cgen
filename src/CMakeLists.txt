@@ -133,6 +133,8 @@ target_sources(obj_tl2cgen_common
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_common.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_error.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix_type.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/data_matrix_impl.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/error.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/logging.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/thread_local.h)
