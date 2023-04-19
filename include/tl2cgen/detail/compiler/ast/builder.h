@@ -2,6 +2,7 @@
  * Copyright (c) 2017-2020 by Contributors
  * \file builder.h
  * \brief AST Builder class
+ * \author Hyunsu Cho
  */
 #ifndef TL2CGEN_DETAIL_COMPILER_AST_BUILDER_H_
 #define TL2CGEN_DETAIL_COMPILER_AST_BUILDER_H_
@@ -20,6 +21,9 @@ namespace treelite {
 
 template <typename ThresholdType, typename LeafOutputType>
 class ModelImpl;
+
+template <typename ThresholdType, typename LeafOutputType>
+class Tree;
 
 }  // namespace treelite
 

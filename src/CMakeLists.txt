@@ -83,9 +83,18 @@ target_sources(obj_tl2cgen
     compiler/elf_formatter.cc
     compiler/failsafe.cc
     compiler/pred_transform.cc
+    compiler/ast/builder/build.cc
+    compiler/ast/builder/dump.cc
+    compiler/ast/builder/fold_code.cc
+    compiler/ast/builder/is_categorical_array.cc
+    compiler/ast/builder/load_data_counts.cc
+    compiler/ast/builder/quantize.cc
+    compiler/ast/builder/split.cc
+    compiler/templates/code_folder_template.cc
     compiler/templates/header_template.cc
     compiler/templates/main_template.cc
     compiler/templates/pred_transform.cc
+    compiler/templates/qnode_template.cc
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/annotator.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/compiler.h
@@ -98,9 +107,11 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/pred_transform.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast/ast.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast/builder.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/code_folder_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/header_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/main_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/pred_transform.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/qnode_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/typeinfo.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/util/format_util.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_exception.h

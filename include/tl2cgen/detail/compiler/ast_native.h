@@ -20,7 +20,7 @@ class ASTNativeCompilerImpl;
 class ASTNativeCompiler : public Compiler {
  public:
   explicit ASTNativeCompiler(CompilerParam const& param);
-  virtual ~ASTNativeCompiler();
+  ~ASTNativeCompiler() override;
   CompiledModel Compile(treelite::Model const& model) override;
   CompilerParam QueryParam() const override;
 

@@ -21,7 +21,7 @@ class FailSafeCompilerImpl;
 class FailSafeCompiler : public Compiler {
  public:
   explicit FailSafeCompiler(CompilerParam const& param);
-  virtual ~FailSafeCompiler();
+  ~FailSafeCompiler() override;
   CompiledModel Compile(treelite::Model const& model) override;
   CompilerParam QueryParam() const override;
 
