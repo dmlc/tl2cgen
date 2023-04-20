@@ -35,7 +35,7 @@ int TL2cgenDMatrixCreateFromCSR(void const* data, char const* data_type_str,
     std::size_t num_col, TL2cgenDMatrixHandle* out) {
   API_BEGIN();
 
-  std::unique_ptr<DMatrix> matrix = DMatrix::Create(DMatrixType::kSparseCSR,
+  std::unique_ptr<DMatrix> matrix = DMatrix::Create(DMatrixTypeEnum::kSparseCSR,
       DMatrixElementTypeFromString(data_type_str), data, col_ind, row_ptr, num_row, num_col);
   *out = static_cast<TL2cgenDMatrixHandle>(matrix.release());
   API_END();
@@ -44,7 +44,7 @@ int TL2cgenDMatrixCreateFromCSR(void const* data, char const* data_type_str,
 int TL2cgenDMatrixCreateFromMat(void const* data, char const* data_type_str, std::size_t num_row,
     std::size_t num_col, void const* missing_value, TL2cgenDMatrixHandle* out) {
   API_BEGIN();
-  std::unique_ptr<DMatrix> matrix = DMatrix::Create(DMatrixType::kDenseCLayout,
+  std::unique_ptr<DMatrix> matrix = DMatrix::Create(DMatrixTypeEnum::kDenseCLayout,
       DMatrixElementTypeFromString(data_type_str), data, missing_value, num_row, num_col);
   *out = static_cast<TL2cgenDMatrixHandle>(matrix.release());
   API_END();

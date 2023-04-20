@@ -7,7 +7,7 @@
 #ifndef TL2CGEN_DATA_MATRIX_H_
 #define TL2CGEN_DATA_MATRIX_H_
 
-#include <tl2cgen/data_matrix_type.h>
+#include <tl2cgen/data_matrix_types.h>
 #include <tl2cgen/detail/data_matrix_impl.h>
 #include <tl2cgen/logging.h>
 
@@ -62,12 +62,19 @@ class DMatrix {
 
   template <typename... Args>
   static std::unique_ptr<DMatrix> Create(
-      DMatrixType dmat_type, DMatrixElementType elem_type, Args&&... args) {
+      DMatrixTypeEnum dmat_type, DMatrixElementTypeEnum elem_type, Args&&... args) {
     int const target_variant_index
-        = (static_cast<int>(dmat_type) << 1) + static_cast<int>(elem_type);
+        = (static_cast<int>(dmat_type) * DMatrixTypeEnumCount) + static_cast<int>(elem_type);
     std::unique_ptr<DMatrix> result = std::make_unique<DMatrix>(
         CreateDMatrixWithSpecificVariant<0>(target_variant_index, std::forward<Args>(args)...));
     return result;
+  }
+
+  template <typename DMatrixT>
+  static std::unique_ptr<DMatrix> Create(DMatrixT&& dmat) {
+    auto ptr = std::make_unique<DMatrix>();
+    ptr->variant_ = std::forward<DMatrixT>(dmat);
+    return ptr;
   }
 };
 

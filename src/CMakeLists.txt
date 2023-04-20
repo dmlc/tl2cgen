@@ -113,17 +113,20 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/pred_transform.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/qnode_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/typeinfo.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/util/format_util.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_exception.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_funcs.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/parallel_for.h)
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/util/format_util.h)
 
 target_link_libraries(obj_tl2cgen PRIVATE treelite::treelite)
 
 target_sources(obj_tl2cgen_runtime
     PRIVATE
     c_api/c_api_runtime.cc
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_runtime.h)
+    predictor/predictor.cc
+    predictor/shared_library.cc
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_runtime.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/predictor.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/predictor_types.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/predictor_impl.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/shared_library.h)
 
 target_sources(obj_tl2cgen_common
     PRIVATE
@@ -133,8 +136,12 @@ target_sources(obj_tl2cgen_common
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_common.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_error.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix_type.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/data_matrix_impl.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix_types.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/error.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/logging.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/thread_local.h)
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/thread_local.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/data_matrix_impl.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_config.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_exception.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_funcs.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/parallel_for.h)

@@ -16,7 +16,7 @@
 
 /*!
  * \addtogroup opaque_handles
- * opaque handles
+ * Opaque handles
  * \{
  */
 /*! \brief Handle to a decision tree ensemble model */
