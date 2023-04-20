@@ -43,7 +43,7 @@ inline ThreadConfig ConfigureThreadConfig(int nthread) {
     nthread = MaxNumThread();
     TL2CGEN_CHECK_GE(nthread, 1) << "Invalid number of threads configured in OpenMP";
   } else {
-    TL2CGEN_CHECK_GE(nthread, MaxNumThread())
+    TL2CGEN_CHECK_LE(nthread, MaxNumThread())
         << "nthread cannot exceed " << MaxNumThread() << " (configured by OpenMP)";
   }
   return ThreadConfig{static_cast<std::uint32_t>(nthread)};

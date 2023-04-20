@@ -22,12 +22,10 @@ if (TEST_COVERAGE)
 endif ()
 
 target_sources(tl2cgen_cpp_test
-    PRIVATE test_main.cc
-)
-
-target_include_directories(tl2cgen_cpp_test
-    PRIVATE ../../src/
-)
+    PRIVATE
+    test_main.cc
+    test_compiler_param.cc
+    test_threading_utils.cc)
 
 msvc_use_static_runtime()
 
