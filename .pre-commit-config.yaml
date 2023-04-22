@@ -43,7 +43,7 @@ repos:
   rev: v1.3.5
   hooks:
     - id: clang-format
-      args: ["-i", "--style=file:src/.clang-format"]
+      args: ["-i", "--style=file:.clang-format"]
       language: python
       additional_dependencies: [clang-format>=15.0]
     - id: cpplint
