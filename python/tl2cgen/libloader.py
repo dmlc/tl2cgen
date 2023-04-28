@@ -124,3 +124,22 @@ Error message(s): {os_error_list}
     if lib.TL2cgenRegisterWarningCallback(lib.warn_callback) != 0:
         raise TL2cgenError(py_str(lib.TL2cgenGetLastError()))
     return lib
+
+
+def _check_call(ret):
+    """Check the return value of C API call
+
+    This function will raise exception when error occurs.
+    Wrap every API call with this function
+
+    Parameters
+    ----------
+    ret : int
+        return value from API calls
+    """
+    if ret != 0:
+        raise TL2cgenError(_LIB.TL2cgenGetLastError().decode("utf-8"))
+
+
+# Load native library in the global scope
+_LIB = _load_lib()
