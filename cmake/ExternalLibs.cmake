@@ -1,7 +1,25 @@
 include(FetchContent)
 
 # Treelite
-find_package(Treelite 3.2.0 REQUIRED)
+find_package(Treelite 3.3.0)
+if (Treelite_FOUND)
+  set(TREELITE_FROM_SYSTEM_ROOT TRUE)
+else ()
+  message(STATUS "Did not find Treelite in the system root. Fetching Treelite now...")
+  FetchContent_Declare(
+    treelite
+    GIT_REPOSITORY https://github.com/dmlc/treelite.git
+    GIT_TAG 8c2c142ccc4786c99ce8036acf0bef99aa33bd9e
+  )
+  FetchContent_MakeAvailable(treelite)
+  set_target_properties(treelite PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  target_include_directories(treelite PUBLIC
+      $<BUILD_INTERFACE:${treelite_SOURCE_DIR}/include>
+      $<BUILD_INTERFACE:${treelite_BINARY_DIR}/include>
+      $<INSTALL_INTERFACE:include>)
+  add_library(treelite::treelite ALIAS treelite)
+  set(TREELITE_FROM_SYSTEM_ROOT FALSE)
+endif ()
 
 # fmtlib
 find_package(fmt)
@@ -22,22 +40,24 @@ else ()
 endif ()
 
 # RapidJSON (header-only library)
-add_library(rapidjson INTERFACE)
-find_package(RapidJSON)
-if (RapidJSON_FOUND)
-  target_include_directories(rapidjson INTERFACE ${RAPIDJSON_INCLUDE_DIRS})
-else ()
-  message(STATUS "Did not find RapidJSON in the system root. Fetching RapidJSON now...")
-  FetchContent_Declare(
-      RapidJSON
-      GIT_REPOSITORY https://github.com/Tencent/rapidjson
-      GIT_TAG v1.1.0
-  )
-  FetchContent_Populate(RapidJSON)
-  message(STATUS "RapidJSON was downloaded at ${rapidjson_SOURCE_DIR}.")
-  target_include_directories(rapidjson INTERFACE $<BUILD_INTERFACE:${rapidjson_SOURCE_DIR}/include>)
+if (NOT TARGET rapidjson)
+  add_library(rapidjson INTERFACE)
+  find_package(RapidJSON)
+  if (RapidJSON_FOUND)
+    target_include_directories(rapidjson INTERFACE ${RAPIDJSON_INCLUDE_DIRS})
+  else ()
+    message(STATUS "Did not find RapidJSON in the system root. Fetching RapidJSON now...")
+    FetchContent_Declare(
+        RapidJSON
+        GIT_REPOSITORY https://github.com/Tencent/rapidjson
+        GIT_TAG v1.1.0
+    )
+    FetchContent_Populate(RapidJSON)
+    message(STATUS "RapidJSON was downloaded at ${rapidjson_SOURCE_DIR}.")
+    target_include_directories(rapidjson INTERFACE $<BUILD_INTERFACE:${rapidjson_SOURCE_DIR}/include>)
+  endif ()
+  add_library(RapidJSON::rapidjson ALIAS rapidjson)
 endif ()
-add_library(RapidJSON::rapidjson ALIAS rapidjson)
 
 # Google C++ tests
 if (BUILD_CPP_TESTS)

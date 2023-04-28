@@ -9,8 +9,8 @@
 #ifndef TL2CGEN_DETAIL_COMPILER_FAILSAFE_H_
 #define TL2CGEN_DETAIL_COMPILER_FAILSAFE_H_
 
-#include <treelite/compiler.h>
-#include <treelite/compiler_param.h>
+#include <tl2cgen/compiler.h>
+#include <tl2cgen/compiler_param.h>
 
 #include <memory>
 
