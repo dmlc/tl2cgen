@@ -31,8 +31,9 @@ repos:
     - id: pylint
       name: pylint
       entry: pylint
-      language: system
+      language: python
       types: [python]
+      additional_dependencies: [pylint, hatchling]
       args:
         [
           "-rn", # Only display messages
