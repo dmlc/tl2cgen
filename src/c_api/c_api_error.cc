@@ -4,6 +4,7 @@
  * \author Hyunsu Cho
  * \brief C error handling
  */
+#include <tl2cgen/c_api.h>
 #include <tl2cgen/c_api_error.h>
 #include <tl2cgen/thread_local.h>
 #include <tl2cgen/version.h>

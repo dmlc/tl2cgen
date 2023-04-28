@@ -4,7 +4,8 @@ from typing import Any, Dict, Optional, Union
 
 import treelite
 
-from .handle_class import _Compiler, _convert_treelite_model
+from .data import DMatrix
+from .handle_class import _Annotator, _Compiler, _convert_treelite_model
 
 
 def _py_version() -> str:
@@ -59,3 +60,33 @@ def generate_c_code(
     _model = _convert_treelite_model(model)
     compiler_obj = _Compiler(params, compiler, verbose)
     compiler_obj.compile(_model, dirpath)
+
+
+def annotate_branch(
+    path: Union[str, pathlib.Path],
+    model: treelite.Model,
+    dmat: DMatrix,
+    nthread: Optional[int],
+    verbose: bool = False,
+) -> None:
+    """
+    Annotate branches in a given model using frequency patterns in the training data and save
+    the annotation data to a JSON file. Each node gets the count of the instances that belong to it.
+
+    Parameters
+    ----------
+    path :
+        Location of JSON file
+    model :
+        Model to annotate
+    dmat :
+        Data matrix representing the training data
+    nthread :
+        Number of threads to use while annotating. If missing, use all physical cores in the system.
+    verbose :
+        Whether to print extra messages
+    """
+    _model = _convert_treelite_model(model)
+    nthread = nthread if nthread is not None else 0
+    annotator = _Annotator(_model, dmat, nthread, verbose)
+    annotator.save(path)

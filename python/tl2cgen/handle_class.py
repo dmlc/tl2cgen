@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional, Union
 
 import treelite
 
+from .data import DMatrix
 from .libloader import _LIB, _check_call
 from .util import c_str
 
@@ -35,6 +36,37 @@ class _TreeliteModel:
             _check_call(_LIB.TL2cgenFreeTreeliteModel(self.handle))
 
 
+class _Annotator:
+    """Annotator object"""
+
+    def __init__(
+        self,
+        model: _TreeliteModel,
+        dmat: DMatrix,
+        nthread: int,
+        verbose: bool = False,
+    ):
+        self.handle = ctypes.c_void_p()
+        _check_call(
+            _LIB.TL2cgenAnnotateBranch(
+                model.handle,
+                dmat.handle,
+                ctypes.c_int(nthread),
+                ctypes.c_int(1 if verbose else 0),
+                ctypes.byref(self.handle),
+            )
+        )
+
+    def save(self, path: Union[str, pathlib.Path]):
+        """Save annotation data to a JSON file"""
+        path = pathlib.Path(path).expanduser().resolve()
+        _check_call(_LIB.TL2cgenAnnotationSave(self.handle, c_str(str(path))))
+
+    def __del__(self):
+        if self.handle:
+            _check_call(_LIB.TL2cgenAnnotationFree(self.handle))
+
+
 class _Compiler:
     """Compiler object"""
 
@@ -57,16 +89,7 @@ class _Compiler:
         )
 
     def compile(self, model: _TreeliteModel, dirpath: Union[str, pathlib.Path]) -> None:
-        """
-        Generate prediction code
-
-        Parameters
-        ----------
-        model :
-            Model to convert to C code
-        dirpath :
-            Directory to store header and source files
-        """
+        """Generate prediction code"""
         dirpath = pathlib.Path(dirpath).expanduser().resolve()
         _check_call(
             _LIB.TL2cgenCompilerGenerateCode(
