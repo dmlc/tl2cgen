@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Union
 
 import treelite
 
-from .handle_class import _Compiler, _TreeliteModel
+from .handle_class import _Compiler, _convert_treelite_model
 
 
 def _py_version() -> str:
@@ -56,6 +56,6 @@ def generate_c_code(
     the value of ``parallel_comp``. Otherwise, there will be exactly two files:
     ``./model/header.h``, ``./my/model/main.c``
     """
-    _model = _TreeliteModel(model)
+    _model = _convert_treelite_model(model)
     compiler_obj = _Compiler(params, compiler, verbose)
     compiler_obj.compile(_model, dirpath)

@@ -11,7 +11,11 @@ from .util import c_str
 
 
 class _TreeliteModel:
-    """Treelite model object"""
+    """
+    Internal class holding a handle to Treelite model. We maintain a separate internal class,
+    to maintain **loose coupling** between Treelite and TL2cgen. This way, TL2cgen can support
+    past and future versions of Treelite (within the same major version).
+    """
 
     def __init__(self, model: treelite.Model):
         model_bytes = model.serialize_bytes()
@@ -73,3 +77,31 @@ class _Compiler:
     def __del__(self):
         if self.handle:
             _check_call(_LIB.TL2cgenCompilerFree(self.handle))
+
+
+# Cache mapping from Treelite pointer to _TreeliteModel, to avoid the conversion overhead
+_cached_treelite_handle: Dict[int, _TreeliteModel] = {}
+
+
+def _convert_treelite_model(model: treelite.Model) -> _TreeliteModel:
+    """
+    Convert a Treelite model to _TreeliteModel. We maintain a separate internal class,
+    to maintain **loose coupling** between Treelite and TL2cgen. This way, TL2cgen can support
+    past and future versions of Treelite (within the same major version).
+
+    Parameters
+    ----------
+    model:
+        Treelite model
+
+    Returns
+    -------
+    converted_model:
+        Converted model
+    """
+    try:
+        return _cached_treelite_handle[model.handle.value]
+    except KeyError:
+        obj = _TreeliteModel(model)
+        _cached_treelite_handle[model.handle.value] = obj
+        return obj
