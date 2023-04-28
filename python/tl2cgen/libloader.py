@@ -10,6 +10,7 @@ import warnings
 from typing import List
 
 from .exception import TL2cgenError, TL2cgenLibraryNotFound
+from .util import py_str
 
 
 def _find_lib_path() -> List[pathlib.Path]:
@@ -25,7 +26,7 @@ def _find_lib_path() -> List[pathlib.Path]:
         # When installed, libtreelite will be installed in <site-package-dir>/lib
         curr_path / "lib",
         # Editable installation
-        curr_path.parent / "build",
+        curr_path.parent.parent / "build",
         # Use libtreelite from a system prefix, if available. This should be the last option.
         pathlib.Path(sys.prefix).absolute().resolve() / "lib",
     ]
@@ -95,7 +96,6 @@ def _load_lib() -> ctypes.CDLL:
     lib = None
     for lib_path in lib_paths:
         try:
-            print(f"Trying {lib_path}")
             lib = ctypes.cdll.LoadLibrary(str(lib_path))
             setattr(lib, "path", lib_path)
         except OSError as e:
@@ -120,7 +120,7 @@ Error message(s): {os_error_list}
     lib.log_callback = _log_callback  # type: ignore
     lib.warn_callback = _warn_callback  # type: ignore
     if lib.TL2cgenRegisterLogCallback(lib.log_callback) != 0:
-        raise TL2cgenError(lib.TL2cgenGetLastError().decode("utf-8"))
+        raise TL2cgenError(py_str(lib.TL2cgenGetLastError()))
     if lib.TL2cgenRegisterWarningCallback(lib.warn_callback) != 0:
-        raise TL2cgenError(lib.TL2cgenGetLastError().decode("utf-8"))
+        raise TL2cgenError(py_str(lib.TL2cgenGetLastError()))
     return lib
