@@ -1,6 +1,9 @@
+cmake_policy(SET CMP0091 NEW)
 set(CMAKE_FIND_NO_INSTALL_PREFIX TRUE FORCE)
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
 project(tl2cgen LANGUAGES CXX C VERSION 0.0.1)
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # check MSVC version
 if (MSVC)
@@ -13,8 +16,7 @@ option(TEST_COVERAGE "C++ test coverage" OFF)
 option(USE_OPENMP "Use OpenMP" ON)
 option(BUILD_DOXYGEN "Build documentation for C/C++ functions using Doxygen." OFF)
 option(BUILD_CPP_TESTS "Build C++ tests" OFF)
-option(BUILD_STATIC_LIBS "Build static libs, in addition to dynamic libs" OFF)
-option(FORCE_SHARED_CRT "Build with dynamic CRT on Windows (/MD)" OFF)
+option(HIDE_CXX_SYMBOLS "Hide all C++ symbols. Useful when building Pip package" OFF)
 option(DETECT_CONDA_ENV "Enable detection of Conda environment for dependencies" ON)
 option(BUILD_JVM_RUNTIME "Build TL2cgen runtime for JVM" OFF)
 option(ENABLE_ALL_WARNINGS "Enable all compiler warnings. Only effective for GCC/Clang" OFF)
@@ -72,14 +74,6 @@ target_link_libraries(tl2cgen_runtime PRIVATE obj_tl2cgen_runtime obj_tl2cgen_co
 
 set(TL2CGEN_TARGETS tl2cgen tl2cgen_runtime)
 
-if (BUILD_STATIC_LIBS)
-  add_library(tl2cgen_static STATIC)
-  add_library(tl2cgen_runtime_static STATIC)
-  target_link_libraries(tl2cgen_static PRIVATE obj_tl2cgen obj_tl2cgen_common)
-  target_link_libraries(tl2cgen_runtime_static PRIVATE obj_tl2cgen_runtime obj_tl2cgen_common)
-  list(APPEND TL2CGEN_TARGETS tl2cgen_static tl2cgen_runtime_static)
-endif ()
-
 foreach (lib ${TL2CGEN_TARGETS})
   set_output_directory(${lib} ${PROJECT_BINARY_DIR})
 endforeach ()
@@ -88,9 +82,6 @@ endforeach ()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(INSTALL_TARGETS ${TL2CGEN_TARGETS})
-if (BUILD_STATIC_LIBS)
-  list(APPEND INSTALL_TARGETS obj_tl2cgen obj_tl2cgen_common obj_tl2cgen_runtime rapidjson)
-endif ()
 if (NOT FMTLIB_FROM_SYSTEM_ROOT)
   list(APPEND INSTALL_TARGETS fmt-header-only)
 endif ()
@@ -125,4 +116,3 @@ install(FILES
 write_version()
 
 set_default_configuration_release()
-msvc_use_static_runtime()

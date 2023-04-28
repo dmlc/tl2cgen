@@ -73,6 +73,13 @@ set_target_properties(obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON)
 
+if (HIDE_CXX_SYMBOLS)
+  set_target_properties(obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common
+      PROPERTIES
+      C_VISIBILITY_PRESET hidden
+      CXX_VISIBILITY_PRESET hidden)
+endif (HIDE_CXX_SYMBOLS)
+
 target_sources(obj_tl2cgen
     PRIVATE
     annotator.cc
@@ -116,7 +123,7 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/typeinfo.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/util/format_util.h)
 
-target_link_libraries(obj_tl2cgen PRIVATE treelite::treelite)
+target_link_libraries(obj_tl2cgen PRIVATE ${TREELITE_LIB})
 
 target_sources(obj_tl2cgen_runtime
     PRIVATE

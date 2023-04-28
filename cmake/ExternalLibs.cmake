@@ -4,20 +4,22 @@ include(FetchContent)
 find_package(Treelite 3.3.0)
 if (Treelite_FOUND)
   set(TREELITE_FROM_SYSTEM_ROOT TRUE)
+  set(TREELITE_LIB treelite::treelite)
 else ()
   message(STATUS "Did not find Treelite in the system root. Fetching Treelite now...")
   FetchContent_Declare(
     treelite
-    GIT_REPOSITORY https://github.com/dmlc/treelite.git
-    GIT_TAG 4c260cc8ec2d71287b802d2c1c115fe86b602fd3
+    GIT_REPOSITORY https://github.com/hcho3/treelite.git
+    GIT_TAG 6b95c35016ee4ec38c69af1e94ea3d1b423d9fbf
   )
+  set(BUILD_STATIC_LIBS ON)
   FetchContent_MakeAvailable(treelite)
-  set_target_properties(treelite PROPERTIES EXCLUDE_FROM_ALL TRUE)
-  target_include_directories(treelite PUBLIC
+  set_target_properties(treelite treelite_runtime PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  target_include_directories(treelite_static PUBLIC
       $<BUILD_INTERFACE:${treelite_SOURCE_DIR}/include>
       $<BUILD_INTERFACE:${treelite_BINARY_DIR}/include>
       $<INSTALL_INTERFACE:include>)
-  add_library(treelite::treelite ALIAS treelite)
+  set(TREELITE_LIB treelite_static)
   set(TREELITE_FROM_SYSTEM_ROOT FALSE)
 endif ()
 
@@ -64,10 +66,7 @@ if (BUILD_CPP_TESTS)
   find_package(GTest 1.11.0 CONFIG)
   if (NOT GTEST_FOUND)
     message(STATUS "Did not find Google Test in the system root. Fetching Google Test now...")
-    if (MSVC AND (FORCE_SHARED_CRT OR (NOT DEFINED BUILD_SHARED_LIBS) OR BUILD_SHARED_LIBS))
-      message(STATUS "Building gtest with /MD option...")
-      set(gtest_force_shared_crt ON)
-    endif()
+    set(gtest_force_shared_crt OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git

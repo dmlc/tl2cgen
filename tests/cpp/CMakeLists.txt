@@ -27,8 +27,6 @@ target_sources(tl2cgen_cpp_test
     test_compiler_param.cc
     test_threading_utils.cc)
 
-msvc_use_static_runtime()
-
 # In MSVC solution, group sources according to directories
 file(GLOB_RECURSE TEST_SOURCES *.cc *.h)
 auto_source_group("${TEST_SOURCES}")
