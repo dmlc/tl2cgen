@@ -14,6 +14,7 @@
 #include <tl2cgen/logging.h>
 #include <treelite/tree.h>
 
+#include <cstddef>
 #include <fstream>
 
 using namespace tl2cgen;  // NOLINT(build/namespaces)

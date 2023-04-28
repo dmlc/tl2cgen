@@ -9,7 +9,7 @@ else ()
   FetchContent_Declare(
     treelite
     GIT_REPOSITORY https://github.com/dmlc/treelite.git
-    GIT_TAG 8c2c142ccc4786c99ce8036acf0bef99aa33bd9e
+    GIT_TAG 4c260cc8ec2d71287b802d2c1c115fe86b602fd3
   )
   FetchContent_MakeAvailable(treelite)
   set_target_properties(treelite PROPERTIES EXCLUDE_FROM_ALL TRUE)

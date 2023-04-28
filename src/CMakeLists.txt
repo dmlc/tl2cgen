@@ -78,6 +78,7 @@ target_sources(obj_tl2cgen
     annotator.cc
     filesystem.cc
     c_api/c_api.cc
+    c_api/c_api_treelite_bridge.cc
     compiler/ast_native.cc
     compiler/compiler.cc
     compiler/elf_formatter.cc

@@ -28,6 +28,27 @@ typedef void* TL2cgenCompilerHandle;
 /*! \} */
 
 /*!
+ * \defgroup model_loader Model loader interface: read Treelite model object
+ * \{
+ */
+/*!
+ * \brief Load Treelite model object from a byte sequence
+ * \param treelite_model_bytes Byte sequence containing serialized Treelite model object.
+ * \param treelite_model_bytes_len Length of treelite_model_bytes
+ * \param out Loaded model object
+ * \return 0 for success, -1 for failure
+ */
+TL2CGEN_DLL int TL2cgenLoadTreeliteModelFromBytes(
+    char const* treelite_model_bytes, size_t treelite_model_bytes_len, TL2cgenModelHandle* out);
+/*!
+ * \brief Unload Treelite model object from memory
+ * \param model Model object to free
+ * \return 0 for success, -1 for failure
+ */
+TL2CGEN_DLL int TL2cgenFreeTreeliteModel(TL2cgenModelHandle model);
+/*! \} */
+
+/*!
  * \defgroup annotator Branch annotator interface
  * \{
  */
