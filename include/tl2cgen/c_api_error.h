@@ -7,8 +7,6 @@
 #ifndef TL2CGEN_C_API_ERROR_H_
 #define TL2CGEN_C_API_ERROR_H_
 
-#include <tl2cgen/c_api_common.h>
-
 #include <stdexcept>
 
 /*! \brief macro to guard beginning and end section of all functions */

@@ -8,13 +8,18 @@
 #define TL2CGEN_ANNOTATOR_H_
 
 #include <tl2cgen/data_matrix.h>
-#include <treelite/tree.h>
 
 #include <cstdint>
 #include <cstdio>
 #include <istream>
 #include <ostream>
 #include <vector>
+
+namespace treelite {
+
+class Model;
+
+}
 
 namespace tl2cgen {
 

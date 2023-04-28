@@ -9,10 +9,10 @@ else ()
   message(STATUS "Did not find Treelite in the system root. Fetching Treelite now...")
   FetchContent_Declare(
     treelite
-    GIT_REPOSITORY https://github.com/hcho3/treelite.git
-    GIT_TAG 6b95c35016ee4ec38c69af1e94ea3d1b423d9fbf
+    GIT_REPOSITORY https://github.com/dmlc/treelite.git
+    GIT_TAG 6f78ae20518fc6a09b58388952f497b781978544
   )
-  set(BUILD_STATIC_LIBS ON)
+  set(Treelite_BUILD_STATIC_LIBS ON)
   FetchContent_MakeAvailable(treelite)
   set_target_properties(treelite treelite_runtime PROPERTIES EXCLUDE_FROM_ALL TRUE)
   target_include_directories(treelite_static PUBLIC

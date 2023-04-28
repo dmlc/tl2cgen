@@ -4,7 +4,7 @@ set_target_properties(tl2cgen_cpp_test
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON)
 target_link_libraries(tl2cgen_cpp_test
-    PRIVATE obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common rapidjson
+    PRIVATE obj_tl2cgen rapidjson
     GTest::GTest GTest::gmock fmt::fmt-header-only)
 set_output_directory(tl2cgen_cpp_test ${PROJECT_BINARY_DIR})
 

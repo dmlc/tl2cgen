@@ -3,13 +3,10 @@
 add_library(obj_tl2cgen OBJECT)
 target_link_libraries(obj_tl2cgen PRIVATE fmt::fmt-header-only RapidJSON::rapidjson)
 
-add_library(obj_tl2cgen_runtime OBJECT)
 # -ldl for UNIX-like systems
 if (UNIX)
-  target_link_libraries(obj_tl2cgen_runtime PUBLIC dl)
+  target_link_libraries(obj_tl2cgen PUBLIC dl)
 endif (UNIX)
-
-add_library(obj_tl2cgen_common OBJECT)  # Component shared by both main package and runtime
 
 if (USE_OPENMP)
   if (APPLE)
@@ -37,44 +34,42 @@ else ()
 endif ()
 
 if (ENABLE_ALL_WARNINGS)
-  foreach (target obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common)
+  foreach (target obj_tl2cgen)
     target_compile_options(${target} PRIVATE -Wall -Wextra)
   endforeach ()
 endif ()
 
-foreach (lib obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common)
-  target_include_directories(${lib} PUBLIC
-      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-      $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-      $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>)
+target_include_directories(obj_tl2cgen PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>)
+if (MSVC)
+  target_compile_options(obj_tl2cgen PRIVATE /MP)
+  target_compile_definitions(obj_tl2cgen PRIVATE -DNOMINMAX)
+  target_compile_options(obj_tl2cgen PRIVATE /utf-8 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE)
+else ()
+  target_compile_options(obj_tl2cgen PRIVATE -funroll-loops)
+endif ()
+if (USE_OPENMP)
+  target_link_libraries(obj_tl2cgen PUBLIC OpenMP::OpenMP_CXX)
+  target_compile_definitions(obj_tl2cgen PUBLIC -DTL2CGEN_OPENMP_SUPPORT)
+endif ()
+if (TEST_COVERAGE)
   if (MSVC)
-    target_compile_options(${lib} PRIVATE /MP)
-    target_compile_definitions(${lib} PRIVATE -DNOMINMAX)
-    target_compile_options(${lib} PRIVATE /utf-8 -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE)
-  else ()
-    target_compile_options(${lib} PRIVATE -funroll-loops)
+    message(FATAL_ERROR "Test coverage not available on Windows")
   endif ()
-  if (USE_OPENMP)
-    target_link_libraries(${lib} PUBLIC OpenMP::OpenMP_CXX)
-    target_compile_definitions(${lib} PUBLIC -DTL2CGEN_OPENMP_SUPPORT)
-  endif ()
-  if (TEST_COVERAGE)
-    if (MSVC)
-      message(FATAL_ERROR "Test coverage not available on Windows")
-    endif ()
-    target_compile_options(${lib} PUBLIC -g -O0 --coverage)
-    target_link_options(${lib} PUBLIC --coverage)
-  endif ()
-endforeach ()
+  target_compile_options(obj_tl2cgen PUBLIC -g -O0 --coverage)
+  target_link_options(obj_tl2cgen PUBLIC --coverage)
+endif ()
 
-set_target_properties(obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common
+set_target_properties(obj_tl2cgen
     PROPERTIES
     POSITION_INDEPENDENT_CODE ON
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON)
 
 if (HIDE_CXX_SYMBOLS)
-  set_target_properties(obj_tl2cgen obj_tl2cgen_runtime obj_tl2cgen_common
+  set_target_properties(obj_tl2cgen
       PROPERTIES
       C_VISIBILITY_PRESET hidden
       CXX_VISIBILITY_PRESET hidden)
@@ -84,7 +79,9 @@ target_sources(obj_tl2cgen
     PRIVATE
     annotator.cc
     filesystem.cc
+    logging.cc
     c_api/c_api.cc
+    c_api/c_api_error.cc
     c_api/c_api_treelite_bridge.cc
     compiler/ast_native.cc
     compiler/compiler.cc
@@ -103,10 +100,21 @@ target_sources(obj_tl2cgen
     compiler/templates/main_template.cc
     compiler/templates/pred_transform.cc
     compiler/templates/qnode_template.cc
+    predictor/predictor.cc
+    predictor/shared_library.cc
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/annotator.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_error.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/compiler.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/compiler_param.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix_types.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/error.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/logging.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/predictor.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/predictor_types.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/thread_local.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/data_matrix_impl.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/filesystem.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/math_funcs.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast_native.h
@@ -121,35 +129,12 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/pred_transform.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/qnode_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/typeinfo.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/util/format_util.h)
-
-target_link_libraries(obj_tl2cgen PRIVATE ${TREELITE_LIB})
-
-target_sources(obj_tl2cgen_runtime
-    PRIVATE
-    c_api/c_api_runtime.cc
-    predictor/predictor.cc
-    predictor/shared_library.cc
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_runtime.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/predictor.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/predictor_types.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/util/format_util.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/predictor_impl.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/shared_library.h)
-
-target_sources(obj_tl2cgen_common
-    PRIVATE
-    logging.cc
-    c_api/c_api_common.cc
-    c_api/c_api_error.cc
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_common.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/c_api_error.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/data_matrix_types.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/error.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/logging.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/thread_local.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/data_matrix_impl.h
+    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/shared_library.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_config.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_exception.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_funcs.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/parallel_for.h)
+
+target_link_libraries(obj_tl2cgen PRIVATE ${TREELITE_LIB})

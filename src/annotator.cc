@@ -13,6 +13,7 @@
 #include <tl2cgen/detail/math_funcs.h>
 #include <tl2cgen/detail/threading_utils/parallel_for.h>
 #include <tl2cgen/logging.h>
+#include <treelite/tree.h>
 
 #include <cstdint>
 #include <limits>

@@ -68,11 +68,9 @@ if (BUILD_CPP_TESTS)
 endif ()
 
 add_library(tl2cgen SHARED)
-add_library(tl2cgen_runtime SHARED)
-target_link_libraries(tl2cgen PRIVATE obj_tl2cgen obj_tl2cgen_common)
-target_link_libraries(tl2cgen_runtime PRIVATE obj_tl2cgen_runtime obj_tl2cgen_common)
+target_link_libraries(tl2cgen PRIVATE obj_tl2cgen)
 
-set(TL2CGEN_TARGETS tl2cgen tl2cgen_runtime)
+set(TL2CGEN_TARGETS tl2cgen)
 
 foreach (lib ${TL2CGEN_TARGETS})
   set_output_directory(${lib} ${PROJECT_BINARY_DIR})
