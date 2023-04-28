@@ -35,3 +35,6 @@
 /python/.idea/
 /tests/python/.idea/
 /.idea/
+
+# Python cache
+__pycache__/
