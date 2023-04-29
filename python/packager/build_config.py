@@ -9,6 +9,8 @@ class BuildConfiguration:  # pylint: disable=R0902
 
     # Whether to enable OpenMP
     use_openmp: bool = True
+    # Whether to hide C++ symbols
+    hide_cxx_symbols: bool = True
     # Whether to use the TL2cgen library that's installed in the system prefix
     use_system_libtl2cgen: bool = False
 

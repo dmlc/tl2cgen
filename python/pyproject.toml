@@ -28,7 +28,8 @@ classifiers = [
 dependencies = [
     "numpy",
     "scipy",
-    "treelite>=3.3"
+    "treelite>=3.3",
+    "treelite_runtime>=3.3"  # TODO(hcho3): Remove
 ]
 
 [project.optional-dependencies]
