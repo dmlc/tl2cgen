@@ -26,7 +26,7 @@
 #if defined(_MSC_VER) || defined(_WIN32)
 #define TL2CGEN_DLL TL2CGEN_EXTERN_C __declspec(dllexport)
 #else
-#define TL2CGEN_DLL TL2CGEN_EXTERN_C
+#define TL2CGEN_DLL TL2CGEN_EXTERN_C __attribute__((visibility("default")))
 #endif
 
 /*!
