@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, Union
 import treelite
 
 from .data import DMatrix
-from .handle_class import _Annotator, _Compiler, _convert_treelite_model
+from .handle_class import _Annotator, _Compiler, _TreeliteModel
 
 
 def _py_version() -> str:
@@ -59,7 +59,7 @@ def generate_c_code(
     the value of ``parallel_comp``. Otherwise, there will be exactly two files:
     ``./model/header.h``, ``./my/model/main.c``
     """
-    _model = _convert_treelite_model(model)
+    _model = _TreeliteModel(model)
     compiler_obj = _Compiler(params, compiler, verbose)
     compiler_obj.compile(_model, dirpath)
 
@@ -89,7 +89,7 @@ def annotate_branch(
     verbose :
         Whether to print extra messages
     """
-    _model = _convert_treelite_model(model)
+    _model = _TreeliteModel(model)
     nthread = nthread if nthread is not None else 0
     annotator = _Annotator(_model, dmat, nthread, verbose)
     annotator.save(path)
