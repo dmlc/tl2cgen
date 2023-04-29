@@ -102,14 +102,14 @@ std::size_t Predictor::PredictBatch(
     return 0;
   }
   double const tstart = GetTime();
-  const std::size_t split_factor
-      = std::min(static_cast<std::size_t>(thread_config_.nthread), num_row);
-  const std::vector<std::size_t> row_ptr = SplitBatch(dmat, split_factor);
+  // Reduce nthread if n_row is small
+  const std::size_t nthread = std::min(static_cast<std::size_t>(thread_config_.nthread), num_row);
+  const std::vector<std::size_t> row_ptr = SplitBatch(dmat, nthread);
   std::size_t total_size = 0;
-  std::vector<std::size_t> result_size(thread_config_.nthread);
-  tl2cgen::detail::threading_utils::ParallelFor(std::uint32_t(0), thread_config_.nthread,
-      thread_config_, tl2cgen::detail::threading_utils::ParallelSchedule::Static(),
-      [&](std::uint32_t thread_id, int) {
+  std::vector<std::size_t> result_size(nthread);
+  tl2cgen::detail::threading_utils::ParallelFor(std::size_t(0), nthread, thread_config_,
+      tl2cgen::detail::threading_utils::ParallelSchedule::Static(),
+      [&](std::size_t thread_id, int) {
         std::size_t rbegin = row_ptr[thread_id];
         std::size_t rend = row_ptr[thread_id + 1];
         result_size[thread_id]
@@ -129,9 +129,10 @@ std::size_t Predictor::PredictBatch(
         [&, num_class = num_class_](auto&& pred_func_concrete, auto&& out_pred_ptr) {
           using LeafOutputType =
               typename std::remove_reference_t<decltype(pred_func_concrete)>::leaf_output_type;
-          using ExpectedLeafOutputType = std::remove_pointer<decltype(out_pred_ptr)>;
+          using ExpectedLeafOutputType
+              = std::remove_pointer_t<std::remove_reference_t<decltype(out_pred_ptr)>>;
           if constexpr (std::is_same_v<LeafOutputType, ExpectedLeafOutputType>) {
-            auto* out_result_ = static_cast<LeafOutputType*>(out_result);
+            auto* out_result_ = static_cast<LeafOutputType*>(out_result->data());
             for (std::size_t rid = 0; rid < num_row; ++rid) {
               for (std::size_t k = 0; k < query_size_per_instance; ++k) {
                 out_result_[rid * query_size_per_instance + k] = out_result_[rid * num_class + k];
@@ -139,7 +140,9 @@ std::size_t Predictor::PredictBatch(
             }
           } else {
             TL2CGEN_LOG(FATAL)
-                << "Type mismatch between LeafOutputType of the model and the output buffer";
+                << "Type mismatch between LeafOutputType of the model and the output buffer. "
+                << "LeafOutputType = " << typeid(LeafOutputType).name()
+                << ", ExpectedLeafOutputType = " << typeid(ExpectedLeafOutputType).name();
           }
         },
         pred_func_->variant_, out_result->variant_);

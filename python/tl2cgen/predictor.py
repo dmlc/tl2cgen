@@ -5,12 +5,10 @@ import ctypes
 import pathlib
 from typing import Optional, Union
 
-import numpy as np
-
 from .contrib.util import _libext
 from .data import DMatrix
-from .dtypes import type_info_to_ctypes_type, type_info_to_numpy_type
 from .exception import TL2cgenError
+from .handle_class import _OutputVector
 from .libloader import _LIB, _check_call
 from .util import c_str, py_str
 
@@ -78,7 +76,7 @@ class Predictor:
 
     def __del__(self):
         if self.handle:
-            _check_call(_LIB.TL2cgenDMatrixFree(self.handle))
+            _check_call(_LIB.TL2cgenPredictorFree(self.handle))
             self.handle = None
 
     @property
@@ -150,15 +148,10 @@ class Predictor:
                 self.handle, dmat.handle, ctypes.byref(result_size)
             )
         )
-        result_type = ctypes.c_char_p()
-        _check_call(
-            _LIB.TL2cgenPredictorQueryLeafOutputType(
-                self.handle, ctypes.byref(result_type)
-            )
-        )
-        result_type_str = py_str(result_type.value)
-        out_result = np.zeros(
-            result_size.value, dtype=type_info_to_numpy_type(result_type_str), order="C"
+
+        out_result = _OutputVector(
+            predictor_handle=self.handle,
+            dmat_handle=dmat.handle,
         )
         out_result_size = ctypes.c_size_t()
         _check_call(
@@ -167,16 +160,17 @@ class Predictor:
                 dmat.handle,
                 ctypes.c_int(1 if verbose else 0),
                 ctypes.c_int(1 if pred_margin else 0),
-                out_result.ctypes.data_as(
-                    ctypes.POINTER(type_info_to_ctypes_type(result_type_str))
-                ),
+                out_result.handle,
                 ctypes.byref(out_result_size),
             )
         )
+
+        out_result_array = out_result.toarray()
         idx = int(out_result_size.value)
-        res = out_result[0:idx].reshape((dmat.shape[0], -1)).squeeze()
+        res = out_result_array[0:idx].reshape((dmat.shape[0], -1))
         if self.num_class_ > 1 and dmat.shape[0] != idx:
             res = res.reshape((-1, self.num_class_))
+
         return res
 
     def _load_metadata(self, handle: ctypes.c_void_p) -> None:

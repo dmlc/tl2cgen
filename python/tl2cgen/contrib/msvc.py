@@ -5,6 +5,7 @@ import itertools
 import os
 import pathlib
 import re
+import sys
 from typing import Any, Dict, List
 
 from pkg_resources import parse_version
@@ -15,11 +16,20 @@ from .util import _libext
 LIBEXT = _libext()
 
 
+if sys.platform != "win32":
+
+    class WindowsError(Exception):  # pylint: disable=C0115
+        pass
+
+
 def _is_64bit_windows() -> bool:
     return "PROGRAMFILES(X86)" in os.environ
 
 
 def _varsall_bat_path() -> pathlib.Path:  # pylint: disable=R0912
+    if sys.platform != "win32":
+        raise RuntimeError("_varsall_bat_path() supported only on Windows")
+
     # if a custom location is given, try that first
     if "TREELITE_VCVARSALL" in os.environ:
         candidate = pathlib.Path(os.environ["TREELITE_VCVARSALL"]).resolve()

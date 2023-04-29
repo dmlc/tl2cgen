@@ -25,6 +25,10 @@ namespace tl2cgen::predictor::detail {
 
 template <typename ThresholdType, typename LeafOutputType, typename ElementType, typename PredFunc>
 inline std::size_t ApplyBatch(
+    DenseDMatrix<ElementType> const*, int, std::size_t, std::size_t, LeafOutputType*, PredFunc);
+
+template <typename ThresholdType, typename LeafOutputType, typename ElementType, typename PredFunc>
+inline std::size_t ApplyBatch(
     CSRDMatrix<ElementType> const*, int, std::size_t, std::size_t, LeafOutputType*, PredFunc);
 
 /*!
@@ -139,7 +143,7 @@ PredictFunctionVariant SetPredictFunctionVariant(int target_variant_index,
   if constexpr (variant_index != std::variant_size_v<PredictFunctionVariant>) {
     if (variant_index == target_variant_index) {
       using PredFuncType = std::variant_alternative_t<variant_index, PredictFunctionVariant>;
-      result = PredFuncType(shared_lib, num_class, num_class);
+      result = PredFuncType(shared_lib, num_feature, num_class);
     } else {
       result = SetPredictFunctionVariant<variant_index + 1>(
           target_variant_index, shared_lib, num_feature, num_class);

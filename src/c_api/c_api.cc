@@ -185,7 +185,7 @@ int TL2cgenPredictorPredictBatch(TL2cgenPredictorHandle predictor, TL2cgenDMatri
   API_END();
 }
 
-int TL2cgenCreatePredictorOutputVector(TL2cgenPredictorHandle predictor, TL2cgenDMatrixHandle dmat,
+int TL2cgenPredictorCreateOutputVector(TL2cgenPredictorHandle predictor, TL2cgenDMatrixHandle dmat,
     TL2cgenPredictorOutputHandle* out_output_vector) {
   API_BEGIN();
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
@@ -197,7 +197,15 @@ int TL2cgenCreatePredictorOutputVector(TL2cgenPredictorHandle predictor, TL2cgen
   API_END();
 }
 
-int TL2cgenDeletePredictorOutputVector(TL2cgenPredictorOutputHandle output_vector) {
+int TL2cgenPredictorGetRawPointerFromOutputVector(
+    TL2cgenPredictorOutputHandle output_vector, void const** out_ptr) {
+  API_BEGIN();
+  auto* output_vector_ = static_cast<predictor::OutputBuffer*>(output_vector);
+  *out_ptr = output_vector_->data();
+  API_END();
+}
+
+int TL2cgenPredictorDeleteOutputVector(TL2cgenPredictorOutputHandle output_vector) {
   API_BEGIN();
   auto* output_vector_ = static_cast<predictor::OutputBuffer*>(output_vector);
   delete output_vector_;

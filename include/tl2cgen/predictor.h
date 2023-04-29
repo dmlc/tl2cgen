@@ -39,6 +39,9 @@ class OutputBuffer {
   ~OutputBuffer() {
     std::visit([](auto&& ptr) { delete[] ptr; }, variant_);
   }
+  void* data() {
+    return std::visit([](auto&& ptr) { return static_cast<void*>(ptr); }, variant_);
+  }
 
   detail::OutputPtrVariant variant_;
 };
@@ -65,13 +68,16 @@ class PredictFunction {
         [&](auto&& pred_func_concrete, auto&& out_pred_ptr) {
           using LeafOutputType =
               typename std::remove_reference_t<decltype(pred_func_concrete)>::leaf_output_type;
-          using ExpectedLeafOutputType = std::remove_pointer<decltype(out_pred_ptr)>;
+          using ExpectedLeafOutputType
+              = std::remove_pointer_t<std::remove_reference_t<decltype(out_pred_ptr)>>;
           if constexpr (std::is_same_v<LeafOutputType, ExpectedLeafOutputType>) {
             return pred_func_concrete.PredictBatch(dmat, rbegin, rend, pred_margin, out_pred_ptr);
           } else {
             TL2CGEN_LOG(FATAL)
-                << "Type mismatch between LeafOutputType of the model and the output buffer";
-            return 0;
+                << "Type mismatch between LeafOutputType of the model and the output buffer. "
+                << "LeafOutputType = " << typeid(LeafOutputType).name()
+                << ", ExpectedLeafOutputType = " << typeid(ExpectedLeafOutputType).name();
+            return std::size_t(0);
           }
         },
         variant_, out_pred->variant_);

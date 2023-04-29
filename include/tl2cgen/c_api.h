@@ -255,28 +255,30 @@ TL2CGEN_DLL int TL2cgenPredictorLoad(
  *        divides the workload among all worker threads.
  *
  *        Note. This function does not allocate the result vector. Use
- *        TL2cgenCreatePredictorOutputVector() convenience function to allocate the vector of
+ *        \ref TL2cgenPredictorCreateOutputVector convenience function to allocate the vector of
  *        the right length and type.
  *
- *        Note. To access the element values from the output vector, you should cast the opaque
- *        handle (TL2cgenPredictorOutputHandle type) to an appropriate pointer LeafOutputType*,
+ *        Note. To access the element values from the output vector, you should convert the opaque
+ *        handle (\ref TL2cgenPredictorOutputHandle type) to an appropriate pointer LeafOutputType*,
  *        where the type is either float, double, or uint32_t. So carry out the following steps:
- *        1. Call TL2cgenPredictorQueryLeafOutputType() to obtain the type of the leaf output.
+ *        1. Call \ref TL2cgenPredictorQueryLeafOutputType to obtain the type of the leaf output.
  *           It will return a string ("float32", "float64", or "uint32") representing the type.
- *        2. Depending on the type string, cast the output handle to float*, double*, or uint32_t*.
- *        3. Now access the array with the casted pointer. The array's length is given by
- *           TL2cgenPredictorQueryResultSize().
+ *        2. Extract the void* pointer from the output vector object by calling
+ *           \ref TL2cgenPredictorGetRawPointerFromOutputVector.
+ *        3. Depending on the type string, cast the void* pointer to float*, double*, or uint32_t*.
+ *        4. Now access the array with the casted pointer. The array's length is given by
+ *           \ref TL2cgenPredictorQueryResultSize.
  * \param predictor Predictor
  * \param dmat The data matrix
  * \param verbose Whether to produce extra messages
  * \param pred_margin Whether to produce raw margin scores instead of
  *                    transformed probabilities
  * \param out_result Resulting output vector. This pointer must point to an array of length
- *                   TL2cgenPredictorQueryResultSize() and of type
- *                   TL2cgenPredictorQueryLeafOutputType().
+ *                   \ref TL2cgenPredictorQueryResultSize and of type
+ *                   \ref TL2cgenPredictorQueryLeafOutputType.
  * \param out_result_size Used to save length of the output vector,
  *                        which is guaranteed to be less than or equal to
- *                        TL2cgenPredictorQueryResultSize()
+ *                        \ref TL2cgenPredictorQueryResultSize
  * \return 0 for success, -1 for failure
  */
 TL2CGEN_DLL int TL2cgenPredictorPredictBatch(TL2cgenPredictorHandle predictor,
@@ -286,34 +288,43 @@ TL2CGEN_DLL int TL2cgenPredictorPredictBatch(TL2cgenPredictorHandle predictor,
 /*!
  * \brief Convenience function to allocate an output vector that is able to hold the prediction
  *        result for a given data matrix. The vector's length will be identical to
- *        TL2cgenPredictorQueryResultSize() and its type will be identical to
- *        TL2cgenPredictorQueryLeafOutputType(). To prevent memory leak, make sure to de-allocate
- *        the vector with TL2cgenDeletePredictorOutputVector().
+ *        \ref TL2cgenPredictorQueryResultSize and its type will be identical to
+ *        \ref TL2cgenPredictorQueryLeafOutputType. To prevent memory leak, make sure to de-allocate
+ *        the vector with \ref TL2cgenPredictorDeleteOutputVector.
  *
- *        Note. To access the element values from the output vector, you should cast the opaque
- *        handle (TL2cgenPredictorOutputHandle type) to an appropriate pointer LeafOutputType*,
+ *        Note. To access the element values from the output vector, you should convert the opaque
+ *        handle (\ref TL2cgenPredictorOutputHandle type) to an appropriate pointer LeafOutputType*,
  *        where the type is either float, double, or uint32_t. So carry out the following steps:
- *        1. Call TL2cgenPredictorQueryLeafOutputType() to obtain the type of the leaf output.
+ *        1. Call \ref TL2cgenPredictorQueryLeafOutputType to obtain the type of the leaf output.
  *           It will return a string ("float32", "float64", or "uint32") representing the type.
- *        2. Depending on the type string, cast the output handle to float*, double*, or uint32_t*.
- *        3. Now access the array with the casted pointer. The array's length is given by
- *           TL2cgenPredictorQueryResultSize().
+ *        2. Extract the void* pointer from the output vector object by calling
+ *           \ref TL2cgenPredictorGetRawPointerFromOutputVector.
+ *        3. Depending on the type string, cast the void* pointer to float*, double*, or uint32_t*.
+ *        4. Now access the array with the casted pointer. The array's length is given by
+ *           \ref TL2cgenPredictorQueryResultSize.
  * \param predictor Predictor
  * \param dmat The data matrix
  * \param out_output_vector Handle to the newly allocated output vector.
  * \return 0 for success, -1 for failure
  */
-TL2CGEN_DLL int TL2cgenCreatePredictorOutputVector(TL2cgenPredictorHandle predictor,
+TL2CGEN_DLL int TL2cgenPredictorCreateOutputVector(TL2cgenPredictorHandle predictor,
     TL2cgenDMatrixHandle dmat, TL2cgenPredictorOutputHandle* out_output_vector);
 
 /*!
+ * \brief Get the raw (void*) pointer from an output vector object
+ * \param output_vector Output vector
+ * \param out_ptr Raw pointer representing the output vector
+ * \return 0 for success, -1 for failure
+ */
+TL2CGEN_DLL int TL2cgenPredictorGetRawPointerFromOutputVector(
+    TL2cgenPredictorOutputHandle output_vector, void const** out_ptr);
+
+/*!
  * \brief De-allocate an output vector
- * \param predictor Predictor
  * \param output_vector Output vector to delete from memory
  * \return 0 for success, -1 for failure
  */
-TL2CGEN_DLL int TL2cgenDeletePredictorOutputVector(
-    TL2cgenPredictorHandle predictor, TL2cgenPredictorOutputHandle output_vector);
+TL2CGEN_DLL int TL2cgenPredictorDeleteOutputVector(TL2cgenPredictorOutputHandle output_vector);
 
 /*!
  * \brief Given a data matrix, query the necessary size of array to hold predictions for all rows.
