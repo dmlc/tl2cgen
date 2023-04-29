@@ -1,12 +1,11 @@
 """Generator for Makefile and CMakeLists.txt"""
-import json
 import pathlib
 from typing import List, Optional, Union
 
 from .contrib import gcc, msvc
 from .contrib.util import _libext, _toolchain_exist_check
-from .create_shared import _process_options, _validate_recipe
 from .exception import TL2cgenError
+from .util import _open_and_validate_recipe, _process_options
 
 
 def generate_makefile(
@@ -35,13 +34,7 @@ def generate_makefile(
     dirpath = pathlib.Path(dirpath).expanduser().resolve()
     if not dirpath.is_dir():
         raise TL2cgenError(f"Directory {dirpath} does not exist")
-    try:
-        with open(dirpath / "recipe.json", "r", encoding="UTF-8") as f:
-            recipe = json.load(f)
-    except IOError as e:
-        raise TL2cgenError("Failed to open recipe.json") from e
-
-    _validate_recipe(recipe)
+    recipe = _open_and_validate_recipe(dirpath / "recipe.json")
     options = _process_options(options)
 
     # Determine file extensions for object and library files
@@ -103,13 +96,7 @@ def generate_cmakelists(
     dirpath = pathlib.Path(dirpath).expanduser().resolve()
     if not dirpath.is_dir():
         raise TL2cgenError(f"Directory {dirpath} does not exist")
-    try:
-        with open(dirpath / "recipe.json", "r", encoding="UTF-8") as f:
-            recipe = json.load(f)
-    except IOError as e:
-        raise TL2cgenError("Failed to open recipe.json") from e
-
-    _validate_recipe(recipe)
+    recipe = _open_and_validate_recipe(dirpath / "recipe.json")
     options = _process_options(options)
 
     target = recipe["target"]

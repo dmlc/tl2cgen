@@ -20,6 +20,7 @@ def generate_c_code(
     dirpath: Union[str, pathlib.Path],
     params: Optional[Dict[str, Any]],
     compiler: str = "ast_native",
+    *,
     verbose: bool = False,
 ) -> None:
     """
@@ -38,7 +39,8 @@ def generate_c_code(
         Parameters for compiler. See :py:doc:`this page <knobs/compiler_param>`
         for the list of compiler parameters.
     compiler :
-        Name of compiler to use
+        Kind of C code generator to use. Currently, there are two possible values:
+        {"ast_native", "failsafe"}
     verbose :
         Whether to print extra messages during compilation
 
@@ -66,6 +68,7 @@ def annotate_branch(
     path: Union[str, pathlib.Path],
     model: treelite.Model,
     dmat: DMatrix,
+    *,
     nthread: Optional[int],
     verbose: bool = False,
 ) -> None:
