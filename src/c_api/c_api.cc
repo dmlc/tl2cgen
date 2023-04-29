@@ -220,14 +220,14 @@ int TL2cgenPredictorQueryNumClass(TL2cgenPredictorHandle predictor, size_t* out)
   API_END();
 }
 
-int TreelitePredictorQueryNumFeature(TL2cgenPredictorHandle predictor, size_t* out) {
+int TL2cgenPredictorQueryNumFeature(TL2cgenPredictorHandle predictor, size_t* out) {
   API_BEGIN();
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
   *out = predictor_->QueryNumFeature();
   API_END();
 }
 
-int TreelitePredictorQueryPredTransform(TL2cgenPredictorHandle predictor, char const** out) {
+int TL2cgenPredictorQueryPredTransform(TL2cgenPredictorHandle predictor, char const** out) {
   API_BEGIN()
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
   auto pred_transform = predictor_->QueryPredTransform();
@@ -237,7 +237,7 @@ int TreelitePredictorQueryPredTransform(TL2cgenPredictorHandle predictor, char c
   API_END();
 }
 
-int TreelitePredictorQuerySigmoidAlpha(TL2cgenPredictorHandle predictor, float* out) {
+int TL2cgenPredictorQuerySigmoidAlpha(TL2cgenPredictorHandle predictor, float* out) {
   API_BEGIN()
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
   *out = predictor_->QuerySigmoidAlpha();

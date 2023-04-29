@@ -75,7 +75,7 @@ def export_lib(
     libpath = pathlib.Path(libpath).expanduser().resolve()
     long_build_time_warning = not (params and "parallel_comp" in params)
 
-    with TemporaryDirectory(dir=libpath) as tempdir:
+    with TemporaryDirectory() as tempdir:
         generate_c_code(model, tempdir, params, compiler, verbose=verbose)
         temp_libpath = create_shared(
             toolchain,

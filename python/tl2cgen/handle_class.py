@@ -34,6 +34,7 @@ class _TreeliteModel:
     def __del__(self):
         if self.handle:
             _check_call(_LIB.TL2cgenFreeTreeliteModel(self.handle))
+            self.handle = None
 
 
 class _Annotator:
@@ -65,6 +66,7 @@ class _Annotator:
     def __del__(self):
         if self.handle:
             _check_call(_LIB.TL2cgenAnnotationFree(self.handle))
+            self.handle = None
 
 
 class _Compiler:
@@ -100,3 +102,4 @@ class _Compiler:
     def __del__(self):
         if self.handle:
             _check_call(_LIB.TL2cgenCompilerFree(self.handle))
+            self.handle = None

@@ -102,7 +102,9 @@ std::size_t Predictor::PredictBatch(
     return 0;
   }
   double const tstart = GetTime();
-  const std::vector<std::size_t> row_ptr = SplitBatch(dmat, thread_config_.nthread);
+  const std::size_t split_factor
+      = std::min(static_cast<std::size_t>(thread_config_.nthread), num_row);
+  const std::vector<std::size_t> row_ptr = SplitBatch(dmat, split_factor);
   std::size_t total_size = 0;
   std::vector<std::size_t> result_size(thread_config_.nthread);
   tl2cgen::detail::threading_utils::ParallelFor(std::uint32_t(0), thread_config_.nthread,
