@@ -23,8 +23,9 @@
 
 namespace tl2cgen::predictor::detail {
 
-template <typename ThresholdType, typename LeafOutputType>
-class PredictFunctionPreset;
+template <typename ThresholdType, typename LeafOutputType, typename ElementType, typename PredFunc>
+inline std::size_t ApplyBatch(
+    CSRDMatrix<ElementType> const*, int, std::size_t, std::size_t, LeafOutputType*, PredFunc);
 
 /*!
  * \brief Data layout. The value -1 signifies the missing value.
@@ -37,44 +38,6 @@ union Entry {
   int missing;
   ElementType fvalue;
 };
-
-/** Variant definitions **/
-using OutputPtrVariant = std::variant<float*, double*, std::uint32_t*>;
-using PredictFunctionVariant
-    = std::variant<PredictFunctionPreset<float, float>, PredictFunctionPreset<float, std::uint32_t>,
-        PredictFunctionPreset<double, double>, PredictFunctionPreset<double, std::uint32_t>>;
-
-/* Variant setters */
-template <int variant_index>
-OutputPtrVariant SetOutputPtrVariant(int target_variant_index, std::size_t size) {
-  OutputPtrVariant result;
-  if constexpr (variant_index != std::variant_size_v<OutputPtrVariant>) {
-    if (variant_index == target_variant_index) {
-      using OutputPtr = std::variant_alternative_t<variant_index, OutputPtrVariant>;
-      using OutputType = std::remove_pointer_t<OutputPtr>;
-      result = static_cast<OutputType*>(new OutputType[size]);
-    } else {
-      result = SetOutputPtrVariant<variant_index + 1>(target_variant_index, size);
-    }
-  }
-  return result;
-}
-
-template <int variant_index>
-PredictFunctionVariant SetPredictFunctionVariant(int target_variant_index,
-    detail::SharedLibrary const& shared_lib, int num_feature, int num_class) {
-  PredictFunctionVariant result;
-  if constexpr (variant_index != std::variant_size_v<PredictFunctionVariant>) {
-    if (variant_index == target_variant_index) {
-      using PredFuncType = std::variant_alternative_t<variant_index, PredictFunctionVariant>;
-      result = PredFuncType(shared_lib, num_class, num_class);
-    } else {
-      result = SetPredictFunctionVariant<variant_index + 1>(
-          target_variant_index, shared_lib, num_feature, num_class);
-    }
-  }
-  return result;
-}
 
 /** Specialized classes **/
 /*!
@@ -146,6 +109,44 @@ class PredictFunctionPreset {
   int num_feature_;
   int num_class_;
 };
+
+/** Variant definitions **/
+using OutputPtrVariant = std::variant<float*, double*, std::uint32_t*>;
+using PredictFunctionVariant
+    = std::variant<PredictFunctionPreset<float, float>, PredictFunctionPreset<float, std::uint32_t>,
+        PredictFunctionPreset<double, double>, PredictFunctionPreset<double, std::uint32_t>>;
+
+/* Variant setters */
+template <int variant_index>
+OutputPtrVariant SetOutputPtrVariant(int target_variant_index, std::size_t size) {
+  OutputPtrVariant result;
+  if constexpr (variant_index != std::variant_size_v<OutputPtrVariant>) {
+    if (variant_index == target_variant_index) {
+      using OutputPtr = std::variant_alternative_t<variant_index, OutputPtrVariant>;
+      using OutputType = std::remove_pointer_t<OutputPtr>;
+      result = static_cast<OutputType*>(new OutputType[size]);
+    } else {
+      result = SetOutputPtrVariant<variant_index + 1>(target_variant_index, size);
+    }
+  }
+  return result;
+}
+
+template <int variant_index>
+PredictFunctionVariant SetPredictFunctionVariant(int target_variant_index,
+    detail::SharedLibrary const& shared_lib, int num_feature, int num_class) {
+  PredictFunctionVariant result;
+  if constexpr (variant_index != std::variant_size_v<PredictFunctionVariant>) {
+    if (variant_index == target_variant_index) {
+      using PredFuncType = std::variant_alternative_t<variant_index, PredictFunctionVariant>;
+      result = PredFuncType(shared_lib, num_class, num_class);
+    } else {
+      result = SetPredictFunctionVariant<variant_index + 1>(
+          target_variant_index, shared_lib, num_feature, num_class);
+    }
+  }
+  return result;
+}
 
 /** Implementation of prediction routine **/
 template <typename ThresholdType, typename LeafOutputType, typename ElementType, typename PredFunc>
