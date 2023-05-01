@@ -32,6 +32,20 @@ class _TreeliteModel:
                 ctypes.byref(self.handle),
             )
         )
+        major_ver, minor_ver, patch_ver = (
+            ctypes.c_int32(),
+            ctypes.c_int32(),
+            ctypes.c_int32(),
+        )
+        _check_call(
+            _LIB.TL2cgenQueryTreeliteModelVersion(
+                self.handle,
+                ctypes.byref(major_ver),
+                ctypes.byref(minor_ver),
+                ctypes.byref(patch_ver),
+            )
+        )
+        self.__version__ = f"{major_ver.value}.{minor_ver.value}.{patch_ver.value}"
 
     def __del__(self):
         if self.handle:

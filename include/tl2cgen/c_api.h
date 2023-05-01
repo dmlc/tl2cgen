@@ -106,6 +106,16 @@ extern char const* TL2CGEN_VERSION;
 TL2CGEN_DLL int TL2cgenLoadTreeliteModelFromBytes(
     char const* treelite_model_bytes, size_t treelite_model_bytes_len, TL2cgenModelHandle* out);
 /*!
+ * \brief Query the Treelite version that produce a given Treelite model object.
+ * \param model Model object
+ * \param major_ver Major version
+ * \param minor_ver Minor version
+ * \param patch_ver Patch version
+ * \return 0 for success, -1 for failure
+ */
+TL2CGEN_DLL int TL2cgenQueryTreeliteModelVersion(TL2cgenModelHandle model, std::int32_t* major_ver,
+    std::int32_t* minor_ver, std::int32_t* patch_ver);
+/*!
  * \brief Unload Treelite model object from memory
  * \param model Model object to free
  * \return 0 for success, -1 for failure
