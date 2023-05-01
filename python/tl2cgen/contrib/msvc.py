@@ -8,7 +8,7 @@ import re
 import sys
 from typing import Any, Dict, List
 
-from pkg_resources import parse_version
+from packaging.version import parse as parse_version
 
 from .create_shared import _create_shared_base
 from .util import _libext
