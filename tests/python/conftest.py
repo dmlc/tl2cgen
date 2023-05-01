@@ -8,7 +8,7 @@ from sklearn.datasets import load_svmlight_file
 
 import tl2cgen
 
-from .metadata import dataset_db
+from .metadata import example_model_db
 
 
 @pytest.fixture(scope="session")
@@ -18,12 +18,13 @@ def annotation():
 
         def compute_annotation(dataset):
             model = treelite.Model.load(
-                dataset_db[dataset].model, model_format=dataset_db[dataset].format
+                example_model_db[dataset].model,
+                model_format=example_model_db[dataset].format,
             )
-            if dataset_db[dataset].dtrain is None:
+            if example_model_db[dataset].dtrain is None:
                 return None
             dtrain = tl2cgen.DMatrix(
-                load_svmlight_file(dataset_db[dataset].dtrain, zero_based=True)[0]
+                load_svmlight_file(example_model_db[dataset].dtrain, zero_based=True)[0]
             )
             annotation_path = pathlib.Path(tmpdir) / f"{dataset}.json"
             tl2cgen.annotate_branch(
@@ -35,5 +36,5 @@ def annotation():
             with open(annotation_path, "r", encoding="utf-8") as f:
                 return f.read()
 
-        annotation_db = {k: compute_annotation(k) for k in dataset_db}
+        annotation_db = {k: compute_annotation(k) for k in example_model_db}
     return annotation_db

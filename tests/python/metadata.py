@@ -2,7 +2,11 @@
 
 import collections
 import pathlib
-from typing import Optional
+from typing import Optional, Union
+
+import treelite
+
+from tl2cgen.contrib.util import _libext
 
 CURRENT_DIR = pathlib.Path(__file__).parent.expanduser().resolve()
 DPATH = CURRENT_DIR.parent / "example_data"
@@ -79,7 +83,24 @@ def _qualify_path(prefix: str, path: Optional[str]) -> Optional[str]:
     return str(new_path)
 
 
-dataset_db = {
+def format_libpath_for_example_model(
+    example_id: str,
+    prefix: Union[pathlib.Path, str],
+) -> pathlib.Path:
+    """Format path for the shared lib corresponding to an example model"""
+    prefix = pathlib.Path(prefix).expanduser().resolve()
+    return prefix.joinpath(example_model_db[example_id].libname + _libext())
+
+
+def load_example_model(example_id: str) -> treelite.Model:
+    """Load an example model"""
+    return treelite.Model.load(
+        example_model_db[example_id].model,
+        model_format=example_model_db[example_id].format,
+    )
+
+
+example_model_db = {
     k: v._replace(
         model=_qualify_path(k, v.model),
         dtrain=_qualify_path(k, v.dtrain),
