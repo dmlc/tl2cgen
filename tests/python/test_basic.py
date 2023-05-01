@@ -113,7 +113,7 @@ def test_srcpkg(tmpdir, dataset, toolchain):
         ["make", "-C", example_model_db[dataset].libname, f"-j{nproc}"], cwd=tmpdir
     )
 
-    libpath = format_libpath_for_example_model(dataset, prefix=tmpdir)
+    libpath = pathlib.Path(tmpdir) / example_model_db[dataset].libname
     predictor = tl2cgen.Predictor(libpath=libpath, verbose=True)
     check_predictor(predictor, dataset)
 
