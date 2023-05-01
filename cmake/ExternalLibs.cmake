@@ -10,7 +10,7 @@ else ()
   FetchContent_Declare(
     treelite
     GIT_REPOSITORY https://github.com/dmlc/treelite.git
-    GIT_TAG 46b194f57601fda1452d805df772e803d3ef2751
+    GIT_TAG 4e30fad775e0ff3bd8e17e261d9deaf88549e650
   )
   set(Treelite_BUILD_STATIC_LIBS ON)
   FetchContent_MakeAvailable(treelite)

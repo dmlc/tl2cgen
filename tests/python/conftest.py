@@ -28,9 +28,9 @@ def annotation():
             )
             annotation_path = pathlib.Path(tmpdir) / f"{dataset}.json"
             tl2cgen.annotate_branch(
-                path=annotation_path,
                 model=model,
                 dmat=dtrain,
+                path=annotation_path,
                 verbose=True,
             )
             with open(annotation_path, "r", encoding="utf-8") as f:

@@ -35,6 +35,7 @@ dependencies = [
 
 [project.optional-dependencies]
 scikit-learn = ["scikit-learn"]
+testing = ["scikit-learn", "pytest", "hypothesis", "pandas"]
 
 [tool.mypy]
 plugins = "numpy.typing.mypy_plugin"

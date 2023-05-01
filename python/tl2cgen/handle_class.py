@@ -99,6 +99,8 @@ class _Compiler:
             params = {}
         if verbose:
             params["verbose"] = 1
+        if isinstance(params.get("annotate_in"), pathlib.Path):
+            params["annotate_in"] = str(params["annotate_in"])
         params_json_str = json.dumps(params)
         _check_call(
             _LIB.TL2cgenCompilerCreate(

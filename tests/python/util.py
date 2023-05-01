@@ -58,6 +58,16 @@ def does_not_raise() -> Iterator[None]:
     yield
 
 
+def has_pandas():
+    """Check whether pandas is available"""
+    try:
+        import pandas  # pylint: disable=unused-import,import-outside-toplevel
+
+        return True
+    except ImportError:
+        return False
+
+
 def check_predictor(predictor: tl2cgen.Predictor, dataset: str) -> None:
     """Check whether a predictor produces correct predictions for a given dataset"""
     dmat = tl2cgen.DMatrix(

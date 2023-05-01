@@ -34,7 +34,9 @@ repos:
       entry: python dev/run_pylint.py
       language: python
       types: [python]
-      additional_dependencies: [pylint, hatchling, pytest, scikit-learn, treelite]
+      additional_dependencies: [
+        pylint, hatchling, pytest, scikit-learn, hypothesis, pandas, treelite
+      ]
 - repo: https://github.com/pocc/pre-commit-hooks
   rev: v1.3.5
   hooks:

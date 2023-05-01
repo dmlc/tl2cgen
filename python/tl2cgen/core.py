@@ -65,9 +65,9 @@ def generate_c_code(
 
 
 def annotate_branch(
-    path: Union[str, pathlib.Path],
     model: treelite.Model,
     dmat: DMatrix,
+    path: Union[str, pathlib.Path],
     *,
     nthread: Optional[int] = None,
     verbose: bool = False,
@@ -78,12 +78,12 @@ def annotate_branch(
 
     Parameters
     ----------
+    dmat :
+        Data matrix representing the training data
     path :
         Location of JSON file
     model :
         Model to annotate
-    dmat :
-        Data matrix representing the training data
     nthread :
         Number of threads to use while annotating. If missing, use all physical cores in the system.
     verbose :
