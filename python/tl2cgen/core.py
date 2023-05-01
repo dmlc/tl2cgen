@@ -69,7 +69,7 @@ def annotate_branch(
     model: treelite.Model,
     dmat: DMatrix,
     *,
-    nthread: Optional[int],
+    nthread: Optional[int] = None,
     verbose: bool = False,
 ) -> None:
     """

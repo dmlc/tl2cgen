@@ -18,7 +18,7 @@ LIBEXT = _libext()
 
 if sys.platform != "win32":
 
-    class WindowsError(Exception):  # pylint: disable=C0115
+    class WindowsError(Exception):  # pylint: disable=C0115,W0622
         pass
 
 
