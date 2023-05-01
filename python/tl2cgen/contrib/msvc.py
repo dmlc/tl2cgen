@@ -31,16 +31,16 @@ def _varsall_bat_path() -> pathlib.Path:  # pylint: disable=R0912
         raise RuntimeError("_varsall_bat_path() supported only on Windows")
 
     # if a custom location is given, try that first
-    if "TREELITE_VCVARSALL" in os.environ:
-        candidate = pathlib.Path(os.environ["TREELITE_VCVARSALL"]).resolve()
+    if "TL2CGEN_VCVARSALL" in os.environ:
+        candidate = pathlib.Path(os.environ["TL2CGEN_VCVARSALL"]).resolve()
         if candidate.name.lower() != "vcvarsall.bat":
             raise OSError(
-                "Environment variable TREELITE_VCVARSALL must point to file vcvarsall.bat"
+                "Environment variable TL2CGEN_VCVARSALL must point to file vcvarsall.bat"
             )
         if candidate.is_file():
             return candidate
         raise OSError(
-            "Environment variable TREELITE_VCVARSALL does not refer to existing vcvarsall.bat"
+            "Environment variable TL2CGEN_VCVARSALL does not refer to existing vcvarsall.bat"
         )
 
     # == Bunch of heuristics to locate vcvarsall.bat ==
@@ -108,7 +108,7 @@ def _varsall_bat_path() -> pathlib.Path:  # pylint: disable=R0912
 
     raise OSError(
         "vcvarsall.bat not found; please specify its full path in the environment "
-        "variable TREELITE_VCVARSALL"
+        "variable TL2CGEN_VCVARSALL"
     )
 
 
