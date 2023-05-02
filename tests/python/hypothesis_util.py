@@ -247,7 +247,8 @@ def standard_regression_datasets(
     n_features_ = draw(n_features)
     if n_informative is None:
         n_informative = just(max(min(n_features_, 1), int(0.1 * n_features_)))
-    X, y, _ = make_regression(
+    # pylint: disable=unbalanced-tuple-unpacking
+    X, y = make_regression(
         n_samples=draw(n_samples),
         n_features=n_features_,
         n_informative=draw(n_informative),

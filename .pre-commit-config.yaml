@@ -35,7 +35,8 @@ repos:
       language: python
       types: [python]
       additional_dependencies: [
-        pylint, hatchling, pytest, scikit-learn, hypothesis, pandas, treelite
+        pylint, hatchling, pytest, scikit-learn, hypothesis, pandas, treelite,
+        lightgbm, xgboost
       ]
 - repo: https://github.com/pocc/pre-commit-hooks
   rev: v1.3.5
