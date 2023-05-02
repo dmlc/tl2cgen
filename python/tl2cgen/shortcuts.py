@@ -39,7 +39,7 @@ def export_lib(
         Location to save the generated dynamic shared library
     params :
         Parameters to be passed to the compiler. See
-        :py:doc:`this page <knobs/compiler_param>` for the list of compiler
+        :py:doc:`this page </compiler_param>` for the list of compiler
         parameters.
     compiler :
         Kind of C code generator to use. Currently, there are two possible values:
@@ -121,7 +121,7 @@ def export_srcpkg(
         Name of model shared library to be built
     params :
         Parameters to be passed to the compiler. See
-        :py:doc:`this page <knobs/compiler_param>` for the list of compiler
+        :py:doc:`this page </compiler_param>` for the list of compiler
         parameters.
     compiler :
         Name of compiler to use in C code generation

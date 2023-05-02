@@ -85,6 +85,7 @@ Contents
   :titlesonly:
 
   api
+  compiler_param
   tl2cgen-doxygen
 
 Indices

@@ -36,7 +36,7 @@ def generate_c_code(
     dirpath :
         Directory to store header and source files
     params :
-        Parameters for compiler. See :py:doc:`this page <knobs/compiler_param>`
+        Parameters for compiler. See :py:doc:`this page </compiler_param>`
         for the list of compiler parameters.
     compiler :
         Kind of C code generator to use. Currently, there are two possible values:
