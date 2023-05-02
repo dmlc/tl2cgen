@@ -1,6 +1,7 @@
 # coding: utf-8
 """
-TL2cgen: Model compiler for decision tree ensembles
+TL2cgen (TreeLite 2 C GENerator):
+Model compiler for decision tree ensembles
 """
 from .core import _py_version, annotate_branch, generate_c_code
 from .create_shared import create_shared

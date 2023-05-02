@@ -1,3 +1,4 @@
+==========================================
 TL2cgen: model compiler for decision trees
 ==========================================
 
@@ -6,11 +7,11 @@ You can convert any decision tree models
 (random forests, gradient boosting models) into C code and distribute it as a native binary.
 
 TL2cgen seamlessly integrates with `Treelite <https://treelite.readthedocs.io/en/latest>`_.
-Any tree models that are supported by Treelite can be translated using TL2cgen.
+Any tree models that are supported by Treelite can be converted into C via TL2cgen.
 
-***********
 Quick start
-***********
+===========
+
 Install TL2cgen from PyPI:
 
 .. code-block:: console
@@ -23,9 +24,46 @@ Or from Conda-forge:
 
    conda install -c conda-forge tl2cgen
 
-*************************************
+To use TL2cgen, first import your tree ensemble model:
+
+.. code-block:: python
+
+  import treelite  # Used for importing tree model
+  model = treelite.Model.load("my_model.json", model_format="xgboost_json")
+
+Now use TL2cgen to generate C code:
+
+.. code-block:: python
+
+  import tl2cgen
+  tl2cgen.generate_c_code(model, dirpath="./src")
+
+TL2cgen also provides a convenient wrapper for building native shared libraries:
+
+.. code-block:: python
+
+  tl2cgen.export_lib(model, toolchain="gcc", libpath="./predictor.so")
+
+You can also build a source archive, with a CMakeLists.txt:
+
+.. code-block:: python
+
+  # Run `cmake` on the target machine
+  tl2cgen.export_srcpkg(model, toolchain="cmake", pkgpath="./archive.zip",
+                        libname="predictor")
+
+Finally, make predictions with the native library using the :py:class:`~tl2cgen.Predictor`
+class:
+
+.. code-block:: python
+
+   predictor = tl2cgen.Predictor("./predictor.so")
+   dmat = tl2cgen.DMatrix(X)
+   out_pred = predictor.predict(dmat)
+
 How are Treelite and TL2cgen related?
-*************************************
+=====================================
+
 Starting from 4.0 version, Treelite no longer supports compiling tree models into
 C code. That part of Treelite has been migrated to TL2cgen.
 
@@ -38,8 +76,18 @@ C code. That part of Treelite has been migrated to TL2cgen.
   It can convert any tree models that can be stored using the Treelite format.
   TL2cgen is one of multiple applications that uses Treelite as a library.
 
-Indices and tables
-==================
+
+Contents
+========
+
+.. toctree::
+  :maxdepth: 2
+  :titlesonly:
+
+  api
+
+Indices
+=======
 
 * :ref:`genindex`
 * :ref:`modindex`

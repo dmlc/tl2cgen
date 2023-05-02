@@ -11,3 +11,7 @@
 div.wy-side-nav-search {
   background-color: #2431ad;
 }
+
+.wy-table-responsive table td,.wy-table-responsive table th {
+    white-space: normal;
+}

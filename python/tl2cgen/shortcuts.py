@@ -64,12 +64,14 @@ def export_lib(
     is equivalent to the following sequence of commands:
 
     .. code-block:: python
+
         tl2cgen.generate_c_code(model, dirpath="/temporary/directory",
                                 params={})
         tl2cgen.create_shared(toolchain="msvc",
                               dirpath="/temporary/directory")
         # Move the library out of the temporary directory
         shutil.move("/temporary/directory/mymodel.dll", "./mymodel.dll")
+
     """
     _toolchain_exist_check(toolchain)
     libpath = pathlib.Path(libpath).expanduser().resolve()

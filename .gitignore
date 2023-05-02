@@ -20,6 +20,7 @@
 
 # Build directories
 /build/
+/doxygen/
 /python/dist/
 /python/build/
 /python/treelite.egg-info/
@@ -38,3 +39,4 @@
 
 # Python cache
 __pycache__/
+/.hypothesis/

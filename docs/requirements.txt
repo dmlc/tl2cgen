@@ -10,3 +10,5 @@ numpy
 scipy
 sphinx-gallery
 pandas
+treelite>=3.3,<4
+treelite_runtime>=3.3,<4
