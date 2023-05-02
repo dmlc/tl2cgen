@@ -29,7 +29,7 @@ def run_doxygen():
         subprocess.run(
             ["cmake", "..", "-DBUILD_DOXYGEN=ON", "-GNinja"], check=True, cwd=DOX_DIR
         )
-        subprocess.run(["ninja", "doc_doxygen"], check=True, cwd=DOX_DIR)
+        subprocess.run(["ninja", "tl2cgen_doc_doxygen"], check=True, cwd=DOX_DIR)
         shutil.copytree(DOX_DIR / "doc_doxygen" / "html", tmpdir / "dev")
     except OSError as e:
         raise RuntimeError(f"Doxygen execution failed {str(e)}") from e
