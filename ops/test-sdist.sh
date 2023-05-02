@@ -3,7 +3,6 @@
 set -euo pipefail
 
 echo "##[section]Building a source distribution..."
-make pippack
 python -m build --sdist .
 
 echo "##[section]Testing the source distribution..."

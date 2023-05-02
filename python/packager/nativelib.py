@@ -53,7 +53,9 @@ def build_libtl2cgen(
         # We use environment variable because it's the only way to pass down custom flags
         # through the cibuildwheel package, which calls `pip wheel` command.
         if "CIBW_TARGET_OSX_ARM64" in os.environ:
-            cmake_cmd.append("-DCMAKE_OSX_ARCHITECTURES=arm64")
+            cmake_cmd.extend(
+                ["-DCMAKE_OSX_ARCHITECTURES=arm64", "-DDETECT_CONDA_ENV=OFF"]
+            )
 
         logger.info("CMake args: %s", str(cmake_cmd))
         subprocess.check_call(cmake_cmd, cwd=build_dir)
