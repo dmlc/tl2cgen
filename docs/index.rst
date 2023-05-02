@@ -38,11 +38,6 @@ C code. That part of Treelite has been migrated to TL2cgen.
   It can convert any tree models that can be stored using the Treelite format.
   TL2cgen is one of multiple applications that uses Treelite as a library.
 
-  now an exchange and serialization format for decision
-  tree models. Treelite  as a small library that's easy to embed in other C++
-  applications.
-* **TL2cgen** is now the model compiler, to convert decision tree models into C code.
-
 Indices and tables
 ==================
 
