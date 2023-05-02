@@ -84,7 +84,7 @@ def test_skl_converter_binary_classifier(tmpdir, clazz, toolchain):
         kwargs["init"] = "zero"
     clf = clazz(max_depth=3, random_state=0, n_estimators=10, **kwargs)
     clf.fit(X, y)
-    expected_prob = clf.predict_proba(X)[:, 1]
+    expected_prob = clf.predict_proba(X)[:, 1:]
 
     model = treelite.sklearn.import_model(clf)
     assert model.num_feature == clf.n_features_in_
@@ -128,7 +128,7 @@ def test_skl_converter_regressor(toolchain, clazz, dataset):
         kwargs["init"] = "zero"
     clf = clazz(max_depth=3, random_state=0, n_estimators=10, **kwargs)
     clf.fit(X, y)
-    expected_pred = clf.predict(X)
+    expected_pred = clf.predict(X).reshape((X.shape[0], -1))
 
     model = treelite.sklearn.import_model(clf)
     assert model.num_feature == clf.n_features_in_
@@ -166,6 +166,7 @@ def test_skl_converter_iforest(toolchain, dataset):  # pylint: disable=W0212
     clf = IsolationForest(max_samples=64, random_state=0, n_estimators=10)
     clf.fit(X)
     expected_pred = clf._compute_chunked_score_samples(X)  # pylint: disable=W0212
+    expected_pred = expected_pred.reshape((X.shape[0], -1))
 
     model = treelite.sklearn.import_model(clf)
     assert model.num_feature == clf.n_features_in_
