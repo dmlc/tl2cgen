@@ -23,5 +23,6 @@ dependencies:
 - pylint
 - awscli
 - pip
+- treelite>=3.4,<4
 - pip:
   - cibuildwheel
