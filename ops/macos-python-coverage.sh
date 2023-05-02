@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-echo "##[section]Building Treelite..."
+echo "##[section]Building TL2cgen..."
 conda --version
 python --version
 
@@ -11,12 +11,12 @@ set -x
 rm -rf build/
 mkdir build
 cd build
-cmake .. -DTEST_COVERAGE=ON -DBUILD_CPP_TEST=ON -GNinja
+cmake .. -DTEST_COVERAGE=ON -DBUILD_CPP_TESTS=ON -GNinja
 ninja
 cd ..
 
-./build/treelite_cpp_test
-PYTHONPATH=./python:./runtime/python python -m pytest --cov=treelite --cov=treelite_runtime -v -rxXs \
+./build/tl2cgen_cpp_test
+PYTHONPATH=./python python -m pytest --cov=tl2cgen -v -rxXs \
   --fulltrace --durations=0 tests/python
 lcov --directory . --capture --output-file coverage.info
 lcov --remove coverage.info '*dmlccore*' --output-file coverage.info
