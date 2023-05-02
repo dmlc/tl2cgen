@@ -3,17 +3,11 @@
 import os
 import pathlib
 import subprocess
+import sys
 
 ROOT_PATH = pathlib.Path(__file__).parent.parent.expanduser().resolve()
-PYLINTRC_PATH = ROOT_PATH / "python" / ".pylintrc"
-PYPKG_PATH = ROOT_PATH / "python" / "tl2cgen"
-
-SCANNED_DIRS = [
-    PYPKG_PATH,
-    ROOT_PATH / "python" / "packager",
-    ROOT_PATH / "dev",
-    ROOT_PATH / "tests" / "python",
-]
+PYPKG_PATH = ROOT_PATH / "python"
+PYLINTRC_PATH = PYPKG_PATH / ".pylintrc"
 
 
 def main():
@@ -21,9 +15,9 @@ def main():
     new_env = os.environ.copy()
     new_env["PYTHONPATH"] = str(PYPKG_PATH)
 
-    input_args = [str(dir) for dir in SCANNED_DIRS]
+    # sys.argv[1:]: List of source files to check
     subprocess.run(
-        ["pylint", "-rn", "-sn", "--rcfile", str(PYLINTRC_PATH)] + input_args,
+        ["pylint", "-rn", "-sn", "--rcfile", str(PYLINTRC_PATH)] + sys.argv[1:],
         check=True,
         env=new_env,
     )
