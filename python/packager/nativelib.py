@@ -45,7 +45,6 @@ def build_libtl2cgen(
             "cmake",
             str(cpp_src_dir),
             generator,
-            "-DKEEP_BUILD_ARTIFACTS_IN_BINARY_DIR=ON",
         ]
         cmake_cmd.extend(build_config.get_cmake_args())
 
@@ -107,7 +106,7 @@ def build_libtl2cgen(
             build_config.use_openmp = False
             _build(generator=generator)
 
-    return build_dir / "lib" / _lib_name()
+    return build_dir / _lib_name()
 
 
 def locate_local_libtl2cgen(
