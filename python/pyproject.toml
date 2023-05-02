@@ -33,6 +33,10 @@ dependencies = [
     "treelite_runtime>=3.4,<4"  # TODO(hcho3): Remove
 ]
 
+[project.urls]
+documentation = "https://tl2cgen.readthedocs.io/en/latest/"
+repository = "https://github.com/dmlc/tl2cgen"
+
 [project.optional-dependencies]
 scikit-learn = ["scikit-learn"]
 testing = ["scikit-learn", "pytest", "hypothesis", "pandas"]
