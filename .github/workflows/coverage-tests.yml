@@ -1,0 +1,95 @@
+name: coverage-tests
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read  # to fetch code (actions/checkout)
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cpp-python-coverage:
+    name: Run Python and C++ tests with test coverage (Linux)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+    - uses: mamba-org/provision-with-micromamba@v14
+      with:
+        cache-downloads: true
+        cache-env: true
+        environment-name: dev
+        environment-file: ops/conda_env/dev.yml
+    - name: Display Conda env
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
+    - name: Run tests with test coverage computation
+      shell: bash -l {0}
+      run: |
+        bash ops/cpp-python-coverage.sh
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
+        verbose: true
+  win-python-coverage:
+    name: Run Python and C++ tests with test coverage (Windows)
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+    - uses: mamba-org/provision-with-micromamba@v14
+      with:
+        cache-downloads: true
+        cache-env: true
+        environment-name: dev
+        environment-file: ops/conda_env/dev.yml
+    - name: Display Conda env
+      shell: cmd /C CALL {0}
+      run: |
+        micromamba info
+        micromamba list
+    - name: Run tests with test coverage computation
+      shell: cmd /C CALL {0}
+      run: |
+        call ops/win-python-coverage.bat
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
+        verbose: true
+  macos-python-coverage:
+    name: Run Python and C++ tests with test coverage (MacOS)
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+    - uses: mamba-org/provision-with-micromamba@v14
+      with:
+        cache-downloads: true
+        cache-env: true
+        environment-name: dev
+        environment-file: ops/conda_env/dev.yml
+    - name: Display Conda env
+      shell: bash -l {0}
+      run: |
+        conda info
+        conda list
+    - name: Run tests with test coverage computation
+      shell: bash -l {0}
+      run: |
+        bash ops/macos-python-coverage.sh
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
+        verbose: true

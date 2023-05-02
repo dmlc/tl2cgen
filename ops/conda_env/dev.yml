@@ -1,0 +1,27 @@
+name: dev
+channels:
+- conda-forge
+dependencies:
+- python=3.10
+- numpy
+- scipy
+- pandas
+- pytest
+- pytest-cov
+- hypothesis
+- scikit-learn
+- coverage
+- codecov
+- ninja
+- lcov
+- cmake
+- llvm-openmp
+- cython
+- lightgbm
+- xgboost
+- cpplint
+- pylint
+- awscli
+- pip
+- pip:
+  - cibuildwheel
