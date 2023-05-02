@@ -3,8 +3,6 @@ name: macos-wheel-builder
 on:
   pull_request:
   push:
-  schedule:
-    - cron: "0 7 * * *"  # Run once daily
 
 permissions:
   contents: read  # to fetch code (actions/checkout)
@@ -38,8 +36,8 @@ jobs:
         submodules: 'true'
     - uses: conda-incubator/setup-miniconda@v2
       with:
-        activate-environment: dev
-        environment-file: ops/conda_env/dev.yml
+        activate-environment: macos_build
+        environment-file: ops/conda_env/macos_build.yml
         miniforge-variant: Mambaforge
         miniforge-version: latest
         use-mamba: true

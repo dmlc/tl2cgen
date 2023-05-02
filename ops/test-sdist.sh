@@ -3,7 +3,7 @@
 set -euo pipefail
 
 echo "##[section]Building a source distribution..."
-python -m build --sdist .
+python -m build --sdist python/
 
 echo "##[section]Testing the source distribution..."
 python -m pip install -v tl2cgen-*.tar.gz

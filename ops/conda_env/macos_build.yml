@@ -1,4 +1,4 @@
-name: dev
+name: macos_build
 channels:
 - conda-forge
 dependencies:
@@ -7,20 +7,11 @@ dependencies:
 - scipy
 - pandas
 - pytest
-- pytest-cov
 - hypothesis
 - scikit-learn
-- coverage
-- codecov
 - ninja
-- lcov
 - cmake
 - llvm-openmp
-- cython
-- lightgbm
-- xgboost
-- cpplint
-- pylint
 - awscli
 - pip
-- treelite>=3.4,<4
+- python-build
