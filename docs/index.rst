@@ -85,6 +85,7 @@ Contents
   :titlesonly:
 
   api
+  tl2cgen-doxygen
 
 Indices
 =======
