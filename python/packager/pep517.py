@@ -79,7 +79,8 @@ def build_wheel(
         libtl2cgen = locate_or_build_libtl2cgen(
             TOPLEVEL_DIR, build_dir=build_dir, build_config=build_config
         )
-        copy_with_logging(libtl2cgen, lib_path, logger=logger)
+        if not build_config.use_system_libtl2cgen:
+            copy_with_logging(libtl2cgen, lib_path, logger=logger)
 
         with cd(workspace):
             wheel_name = hatchling.build.build_wheel(
