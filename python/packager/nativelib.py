@@ -132,20 +132,21 @@ def locate_or_build_libtl2cgen(
     """Locate libtl2cgen; if not exist, build it"""
     logger = logging.getLogger("tl2cgen.packager.locate_or_build_libtl2cgen")
 
-    libtl2cgen = locate_local_libtl2cgen(toplevel_dir, logger=logger)
-    if libtl2cgen is not None:
-        return libtl2cgen
     if build_config.use_system_libtl2cgen:
         # Find libtl2cgen from system prefix
         sys_prefix = pathlib.Path(sys.prefix).absolute().resolve()
-        libtl2cgen = sys_prefix / "lib" / _lib_name()
-        if not libtl2cgen.exists():
+        libtl2cgen_sys = sys_prefix / "lib" / _lib_name()
+        if not libtl2cgen_sys.exists():
             raise RuntimeError(
                 f"use_system_libtl2cgen was specified but {_lib_name()} is "
-                f"not found in {libtl2cgen.parent}"
+                f"not found in {libtl2cgen_sys.parent}"
             )
 
-        logger.info("Using system tl2cgen: %s", str(libtl2cgen))
+        logger.info("Using system tl2cgen: %s", str(libtl2cgen_sys))
+        return libtl2cgen_sys
+
+    libtl2cgen = locate_local_libtl2cgen(toplevel_dir, logger=logger)
+    if libtl2cgen is not None:
         return libtl2cgen
 
     if toplevel_dir.joinpath("cpp_src").exists():
