@@ -4,7 +4,6 @@
 import ctypes
 import os
 import pathlib
-import platform
 import sys
 import warnings
 from typing import List
@@ -23,21 +22,25 @@ def _find_lib_path() -> List[pathlib.Path]:
     """
     curr_path = pathlib.Path(__file__).expanduser().absolute().parent
     dll_path = [
-        # When installed, libtreelite will be installed in <site-package-dir>/lib
+        # When installed, libtl2cgen will be installed in <site-package-dir>/lib
         curr_path / "lib",
         # Editable installation
         curr_path.parent.parent / "build",
-        # Use libtreelite from a system prefix, if available. This should be the last option.
-        pathlib.Path(sys.prefix).absolute().resolve() / "lib",
+        # Use libtl2cgen from a system prefix, if available. This should be the last option.
+        pathlib.Path(sys.prefix).expanduser().resolve() / "lib",
     ]
 
     if sys.platform == "win32":
-        if platform.architecture()[0] == "64bit":
-            dll_path.append(curr_path.joinpath("../../windows/x64/Release/"))
-            dll_path.append(curr_path.joinpath("./windows/x64/Release/"))
-        else:
-            dll_path.append(curr_path.joinpath("../../windows/Release/"))
-            dll_path.append(curr_path.joinpath("./windows/Release/"))
+        # On Windows, Conda may install libs in different paths
+        sys_prefix = pathlib.Path(sys.prefix)
+        dll_path.extend(
+            [
+                sys_prefix / "bin",
+                sys_prefix / "Library",
+                sys_prefix / "Library" / "bin",
+                sys_prefix / "Library" / "lib",
+            ]
+        )
         dll_path = [p.joinpath("tl2cgen.dll") for p in dll_path]
     elif sys.platform.startswith(("linux", "freebsd", "emscripten", "OS400")):
         dll_path = [p.joinpath("libtl2cgen.so") for p in dll_path]

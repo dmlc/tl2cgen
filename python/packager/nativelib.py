@@ -134,16 +134,28 @@ def locate_or_build_libtl2cgen(
 
     if build_config.use_system_libtl2cgen:
         # Find libtl2cgen from system prefix
-        sys_prefix = pathlib.Path(sys.prefix).absolute().resolve()
-        libtl2cgen_sys = sys_prefix / "lib" / _lib_name()
-        if not libtl2cgen_sys.exists():
-            raise RuntimeError(
-                f"use_system_libtl2cgen was specified but {_lib_name()} is "
-                f"not found in {libtl2cgen_sys.parent}"
-            )
-
-        logger.info("Using system tl2cgen: %s", str(libtl2cgen_sys))
-        return libtl2cgen_sys
+        sys_prefix = pathlib.Path(sys.prefix)
+        sys_prefix_candidates = [
+            sys_prefix / "lib",
+            # Paths possibly used on Windows
+            sys_prefix / "bin",
+            sys_prefix / "Library",
+            sys_prefix / "Library" / "bin",
+            sys_prefix / "Library" / "lib",
+        ]
+        sys_prefix_candidates = [
+            p.expanduser().resolve() for p in sys_prefix_candidates
+        ]
+        for candidate_dir in sys_prefix_candidates:
+            libtl2cgen_sys = candidate_dir / _lib_name()
+            if libtl2cgen_sys.exists():
+                logger.info("Using system tl2cgen: %s", str(libtl2cgen_sys))
+                return libtl2cgen_sys
+        raise RuntimeError(
+            f"use_system_libtl2cgen was specified but {_lib_name()} is "
+            f"not found. Paths searched (in order): \n"
+            + "\n".join([f"* {str(p)}" for p in sys_prefix_candidates])
+        )
 
     libtl2cgen = locate_local_libtl2cgen(toplevel_dir, logger=logger)
     if libtl2cgen is not None:
