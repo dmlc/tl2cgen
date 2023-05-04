@@ -63,7 +63,7 @@ endif ()
 
 # Google C++ tests
 if (BUILD_CPP_TESTS)
-  find_package(GTest 1.11.0 CONFIG)
+  find_package(GTest 1.11.0)
   if (NOT GTEST_FOUND)
     message(STATUS "Did not find Google Test in the system root. Fetching Google Test now...")
     set(gtest_force_shared_crt OFF CACHE BOOL "" FORCE)
