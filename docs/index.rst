@@ -84,6 +84,8 @@ Contents
   :maxdepth: 2
   :titlesonly:
 
+  install
+  treelite-migration
   api
   compiler_param
   tl2cgen-doxygen
