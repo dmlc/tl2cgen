@@ -1,7 +1,7 @@
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_FIND_NO_INSTALL_PREFIX TRUE FORCE)
 cmake_minimum_required(VERSION 3.16)
-project(tl2cgen LANGUAGES CXX C VERSION 0.2.1)
+project(tl2cgen LANGUAGES CXX C VERSION 0.2.2)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -64,6 +64,7 @@ if (BUILD_JVM_RUNTIME)
   add_subdirectory(runtime/java)
 endif ()
 if (BUILD_CPP_TESTS)
+  enable_testing()
   add_subdirectory(tests/cpp)
 endif ()
 
