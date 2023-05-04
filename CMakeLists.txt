@@ -64,6 +64,7 @@ if (BUILD_JVM_RUNTIME)
   add_subdirectory(java_runtime)
 endif ()
 if (BUILD_CPP_TESTS)
+  enable_testing()
   add_subdirectory(tests/cpp)
 endif ()
 

@@ -7,6 +7,10 @@ target_link_libraries(tl2cgen_cpp_test
     PRIVATE obj_tl2cgen rapidjson
     GTest::GTest GTest::gmock fmt::fmt-header-only)
 set_output_directory(tl2cgen_cpp_test ${PROJECT_BINARY_DIR})
+add_test(
+    NAME TestTL2cgen
+    COMMAND tl2cgen_cpp_test
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 if (MSVC)
   target_compile_options(tl2cgen_cpp_test PRIVATE
