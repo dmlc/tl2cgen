@@ -21,7 +21,7 @@ struct CompilerParam {
   /*!
    * \brief Name of model annotation file.
    * \verbatim embed:rst:leading-asterisk
-   * Use :py:meth:`~tl2cgen.annotate_branch` to generate this file.
+   * Use :py:func:`tl2cgen.annotate_branch` to generate this file.
    * \endverbatim
    */
   std::string annotate_in;

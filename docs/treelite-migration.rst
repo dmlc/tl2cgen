@@ -62,8 +62,8 @@ for model loading.
 Generating C code
 =================
 
-For generating C code from tree models, replace :py:meth:`treelite.Model.compile`
-with :py:meth:`tl2cgen.generate_c_code`
+For generating C code from tree models, replace ``treelite.Model.compile()``
+with :py:func:`tl2cgen.generate_c_code`
 
 .. code-block:: python
 
@@ -75,7 +75,7 @@ with :py:meth:`tl2cgen.generate_c_code`
 
 Exporting libraries
 ===================
-Replace :py:meth:`treelite.Model.export_lib` with :py:meth:`tl2cgen.export_lib`:
+Replace ``treelite.Model.export_lib()`` with :py:func:`tl2cgen.export_lib`:
 
 .. code-block:: python
 
@@ -85,8 +85,8 @@ Replace :py:meth:`treelite.Model.export_lib` with :py:meth:`tl2cgen.export_lib`:
   # After: TL2cgen. The model object is passed as the first argument
   tl2cgen.export_lib(model, toolchain="msvc", libpath="./mymodel.dll", params={})
 
-:py:meth:`treelite.Model.export_srcpkg` is replaced with :py:meth:`tl2cgen.export_srcpkg`.
-Note that the parameter ``platform`` was removed in :py:meth:`tl2cgen.export_srcpkg`.
+``treelite.Model.export_srcpkg()`` is replaced with :py:func:`tl2cgen.export_srcpkg`.
+Note that the parameter ``platform`` was removed in :py:func:`tl2cgen.export_srcpkg`.
 
 .. code-block:: python
 
@@ -99,19 +99,42 @@ Note that the parameter ``platform`` was removed in :py:meth:`tl2cgen.export_src
   tl2cgen.export_srcpkg(model, toolchain="gcc", pkgpath="./mymodel_pkg.zip",
                         libname="mymodel.so", params={})
 
-Annotating branches
-===================
-Replace :py:class:`treelite.Annotator` with :py:meth:`tl2cgen.annotate_branch`.
-Instead of calling two methods :py:meth:`treelite.Annotator.annotate_branch` and
-:py:meth:`treelite.Annotator.save`, you only need to call one,
-:py:meth:`tl2cgen.annotate_branch`:
+Predicting with exported libraries
+==================================
+Replace ``treelite_runtime.Predictor`` class with :py:class:`tl2cgen.Predictor`.
+In TL2cgen, the Predictor class is part of the same Python module as other
+classes and methods; there is no separate "runtime" module.
+
+In addition, ``treelite_runtime.DMatrix`` is replaced with
+:py:class:`tl2cgen.DMatrix`.
 
 .. code-block:: python
 
   # Before: Treelite 3.x
+  predictor = treelite_runtime.Predictor("./mymodel.so")
+  dmat = treelite_runtime.DMatrix(X)
+  out_pred = predictor.predict(dmat)
+
+  # After: TL2cgen
+  predictor = tl2cgen.Predictor("./mymodel.so")
+  dmat = tl2cgen.DMatrix(X)
+  out_pred = predictor.predict(dmat)
+
+Annotating branches
+===================
+Replace ``treelite.Annotator`` with :py:func:`tl2cgen.annotate_branch`.
+Instead of calling two methods ``treelite.Annotator.annotate_branch`` and
+``treelite.Annotator.save``, you only need to call one,
+:py:func:`tl2cgen.annotate_branch`:
+
+.. code-block:: python
+
+  # Before: Treelite 3.x
+  dmat = treelite_runtime.DMatrix(X_train)
   annotator = treelite.Annotator()
   annotator.annotate_branch(model, dmat)
   annotator.save(path="mymodel-annotation.json")
 
   # After: TL2cgen. Only one method call is needed.
+  dmat = tl2cgen.DMatrix(X_train)
   tl2cgen.annotate_branch(model, dmat, path="mymodel-annotation.json")
