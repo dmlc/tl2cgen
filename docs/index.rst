@@ -85,6 +85,7 @@ Contents
   :titlesonly:
 
   install
+  tutorials/index
   treelite-migration
   api
   compiler_param
