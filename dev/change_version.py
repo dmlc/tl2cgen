@@ -10,6 +10,7 @@ from typing import Optional, TypeVar
 R = TypeVar("R")
 ROOT = pathlib.Path(__file__).parent.parent.expanduser().resolve()
 PY_PACKAGE = ROOT / "python"
+JAVA_PACKAGE = ROOT / "java_runtime"
 
 
 def update_cmake(major: int, minor: int, patch: int) -> None:
@@ -36,25 +37,51 @@ def update_pypkg(
 ) -> None:
     """Change version in the Python package"""
     version = f"{major}.{minor}.{patch}"
-    pyver = version
     if is_rc:
         assert rc_ver
-        pyver = pyver + f"rc{rc_ver}"
+        version = version + f"rc{rc_ver}"
     if is_dev:
-        pyver = pyver + "-dev"
+        version = version + "-dev"
 
     pyver_path = PY_PACKAGE / "tl2cgen" / "VERSION"
     with open(pyver_path, "w", encoding="utf-8") as fd:
-        fd.write(pyver + "\n")
+        fd.write(version + "\n")
 
     pyprj_path = PY_PACKAGE / "pyproject.toml"
-    with open(PY_PACKAGE / "pyproject.toml", "r", encoding="utf-8") as fd:
+    with open(pyprj_path, "r", encoding="utf-8") as fd:
         pyprj = fd.read()
     matched = re.search('version = "' + r"([0-9]+\.[0-9]+\.[0-9]+.*)" + '"', pyprj)
     assert matched, "Couldn't find version string in pyproject.toml."
-    pyprj = pyprj[: matched.start(1)] + pyver + pyprj[matched.end(1) :]
+    pyprj = pyprj[: matched.start(1)] + version + pyprj[matched.end(1) :]
     with open(pyprj_path, "w", encoding="utf-8") as fd:
         fd.write(pyprj)
+
+
+def update_java_pkg(
+    major: int,
+    minor: int,
+    patch: int,
+    *,
+    is_rc: bool,
+    is_dev: bool,
+    rc_ver: Optional[int] = None,
+) -> None:
+    """Change version in the Java package"""
+    version = f"{major}.{minor}.{patch}"
+    if is_rc:
+        assert rc_ver
+        version = version + f"-RC{rc_ver}"
+    if is_dev:
+        version = version + "-SNAPSHOT"
+
+    pom_path = JAVA_PACKAGE / "tl2cgen4j" / "pom.xml"
+    with open(pom_path, "r", encoding="utf-8") as fd:
+        pom = fd.read()
+    matched = re.search("<version>" + r"([0-9]+\.[0-9]+\.[0-9]+.*)" + "</version>", pom)
+    assert matched, "Couldn't find version string in pom.xml."
+    pom = pom[: matched.start(1)] + version + pom[matched.end(1) :]
+    with open(pom_path, "w", encoding="utf-8") as fd:
+        fd.write(pom)
 
 
 def main(args: argparse.Namespace) -> None:
@@ -68,6 +95,14 @@ def main(args: argparse.Namespace) -> None:
         assert args.rc is None, "is_rc must be specified in order to specify rc field"
     update_cmake(args.major, args.minor, args.patch)
     update_pypkg(
+        args.major,
+        args.minor,
+        args.patch,
+        is_rc=args.is_rc,
+        is_dev=args.is_dev,
+        rc_ver=args.rc,
+    )
+    update_java_pkg(
         args.major,
         args.minor,
         args.patch,

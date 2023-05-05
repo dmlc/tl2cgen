@@ -42,3 +42,29 @@ jobs:
     - name: Test sdist
       run: |
         bash ops/test-sdist.sh
+  java-test:
+    name: Run Java tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+    - uses: mamba-org/provision-with-micromamba@v14
+      with:
+        cache-downloads: true
+        cache-env: true
+        environment-name: dev
+        environment-file: ops/conda_env/dev.yml
+    - uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    - name: Cache Maven packages
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2
+        key: tl2cgen4j-${{ runner.os }}-m2-${{ hashFiles('./runtime/java/tl2cgen4j/pom.xml') }}
+        restore-keys: tl2cgen4j-${{ runner.os }}-m2
+    - name: Run tests with test coverage computation
+      shell: bash -l {0}
+      run: |
+        bash ops/test-java.sh

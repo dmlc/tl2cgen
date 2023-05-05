@@ -61,7 +61,7 @@ include(cmake/Version.cmake)
 
 add_subdirectory(src)
 if (BUILD_JVM_RUNTIME)
-  add_subdirectory(runtime/java)
+  add_subdirectory(java_runtime)
 endif ()
 if (BUILD_CPP_TESTS)
   add_subdirectory(tests/cpp)

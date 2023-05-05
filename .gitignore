@@ -27,6 +27,7 @@
 /runtime/python/dist/
 /runtime/python/build/
 /runtime/python/treelite_runtime.egg-info/
+/Testing/
 
 # symbol directories
 *.dSYM/
