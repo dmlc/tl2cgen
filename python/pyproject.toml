@@ -7,7 +7,7 @@ build-backend = "packager.pep517"
 
 [project]
 name = "tl2cgen"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
     {name = "Hyunsu Cho", email = "chohyu01@cs.washington.edu"}
 ]

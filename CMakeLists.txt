@@ -1,7 +1,7 @@
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_FIND_NO_INSTALL_PREFIX TRUE FORCE)
 cmake_minimum_required(VERSION 3.16)
-project(tl2cgen LANGUAGES CXX C VERSION 0.3.0)
+project(tl2cgen LANGUAGES CXX C VERSION 0.3.1)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 

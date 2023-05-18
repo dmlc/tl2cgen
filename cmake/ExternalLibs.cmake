@@ -1,7 +1,7 @@
 include(FetchContent)
 
 # Treelite
-find_package(Treelite 3.4.0)
+find_package(Treelite 3.9.0)
 if (Treelite_FOUND)
   set(TREELITE_FROM_SYSTEM_ROOT TRUE)
   set(TREELITE_LIB treelite::treelite)
