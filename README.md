@@ -1,6 +1,5 @@
 # TL2cgen
 
-![Coverage tests](https://github.com/dmlc/tl2cgen/actions/workflows/coverage-tests.yml/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/tl2cgen/badge/?version=latest)](http://tl2cgen.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/dmlc/tl2cgen/branch/main/graph/badge.svg)](https://codecov.io/gh/dmlc/tl2cgen)
 [![GitHub license](http://dmlc.github.io/img/apache2.svg)](./LICENSE)
