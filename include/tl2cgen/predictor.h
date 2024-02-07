@@ -157,8 +157,8 @@ class Predictor {
    * \brief Get name of post prediction transformation used to train the loaded model
    * \return Name of prediction transformation
    */
-  inline std::string QueryPredTransform() const {
-    return pred_transform_;
+  inline std::string QueryPostprocessor() const {
+    return postprocessor_;
   }
   /*!
    * \brief Get alpha value in sigmoid transformation used to train the loaded model
@@ -201,7 +201,7 @@ class Predictor {
   std::unique_ptr<PredictFunction> pred_func_;
   std::size_t num_class_;
   std::size_t num_feature_;
-  std::string pred_transform_;
+  std::string postprocessor_;
   float sigmoid_alpha_;
   float ratio_c_;
   float global_bias_;

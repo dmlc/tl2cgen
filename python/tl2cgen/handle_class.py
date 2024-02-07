@@ -1,8 +1,7 @@
 """Internal classes to hold native handles"""
 import ctypes
-import json
 import pathlib
-from typing import Any, Dict, Optional, Union
+from typing import Union
 
 import numpy as np
 import treelite
@@ -82,44 +81,6 @@ class _Annotator:
     def __del__(self):
         if self.handle:
             _check_call(_LIB.TL2cgenAnnotationFree(self.handle))
-            self.handle = None
-
-
-class _Compiler:
-    """Compiler object"""
-
-    def __init__(
-        self,
-        params: Optional[Dict[str, Any]],
-        compiler: str = "ast_native",
-        verbose: bool = False,
-    ):
-        self.handle = ctypes.c_void_p()
-        if params is None:
-            params = {}
-        if verbose:
-            params["verbose"] = 1
-        if isinstance(params.get("annotate_in"), pathlib.Path):
-            params["annotate_in"] = str(params["annotate_in"])
-        params_json_str = json.dumps(params)
-        _check_call(
-            _LIB.TL2cgenCompilerCreate(
-                c_str(compiler), c_str(params_json_str), ctypes.byref(self.handle)
-            )
-        )
-
-    def compile(self, model: _TreeliteModel, dirpath: Union[str, pathlib.Path]) -> None:
-        """Generate prediction code"""
-        dirpath = pathlib.Path(dirpath).expanduser().resolve()
-        _check_call(
-            _LIB.TL2cgenCompilerGenerateCode(
-                self.handle, model.handle, c_str(str(dirpath))
-            )
-        )
-
-    def __del__(self):
-        if self.handle:
-            _check_call(_LIB.TL2cgenCompilerFree(self.handle))
             self.handle = None
 
 

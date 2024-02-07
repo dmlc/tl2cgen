@@ -1,11 +1,15 @@
 """Core module of TL2cgen"""
+import ctypes
+import json
 import pathlib
 from typing import Any, Dict, Optional, Union
 
 import treelite
 
 from .data import DMatrix
-from .handle_class import _Annotator, _Compiler, _TreeliteModel
+from .handle_class import _Annotator, _TreeliteModel
+from .libloader import _LIB, _check_call
+from .util import c_str
 
 
 def _py_version() -> str:
@@ -19,7 +23,6 @@ def generate_c_code(
     model: treelite.Model,
     dirpath: Union[str, pathlib.Path],
     params: Optional[Dict[str, Any]],
-    compiler: str = "ast_native",
     *,
     verbose: bool = False,
 ) -> None:
@@ -38,9 +41,6 @@ def generate_c_code(
     params :
         Parameters for compiler. See :py:doc:`this page </compiler_param>`
         for the list of compiler parameters.
-    compiler :
-        Kind of C code generator to use. Currently, there are two possible values:
-        {"ast_native", "failsafe"}
     verbose :
         Whether to print extra messages during compilation
 
@@ -60,8 +60,59 @@ def generate_c_code(
     ``./model/header.h``, ``./my/model/main.c``
     """
     _model = _TreeliteModel(model)
-    compiler_obj = _Compiler(params, compiler, verbose)
-    compiler_obj.compile(_model, dirpath)
+    if params is None:
+        params = {}
+    if verbose:
+        params["verbose"] = 1
+    if isinstance(params.get("annotate_in"), pathlib.Path):
+        params["annotate_in"] = str(params["annotate_in"])
+    params_json_str = json.dumps(params)
+    dirpath = pathlib.Path(dirpath).expanduser().resolve()
+    _check_call(
+        _LIB.TL2cgenGenerateCode(
+            _model.handle,
+            c_str(params_json_str),
+            c_str(str(dirpath)),
+        )
+    )
+
+
+def _dump_compiler_ast(
+    model: treelite.Model,
+    params: Optional[Dict[str, Any]],
+    *,
+    verbose: bool = False,
+) -> str:
+    """
+    Get human-readable representation of Abstract Syntax Tree (AST) from the compiler.
+    For development only.
+
+    Parameters
+    ----------
+    model :
+        Model to convert to C code
+    params :
+        Parameters for compiler. See :py:doc:`this page </compiler_param>`
+        for the list of compiler parameters.
+    """
+    _model = _TreeliteModel(model)
+    if params is None:
+        params = {}
+    if verbose:
+        params["verbose"] = 1
+    if isinstance(params.get("annotate_in"), pathlib.Path):
+        params["annotate_in"] = str(params["annotate_in"])
+    params_json_str = json.dumps(params)
+    out_str = ctypes.c_char_p()
+    _check_call(
+        _LIB.TL2cgenDumpAST(
+            _model.handle,
+            c_str(params_json_str),
+            ctypes.byref(out_str),
+        )
+    )
+    assert out_str.value is not None
+    return out_str.value.decode("utf-8")
 
 
 def annotate_branch(

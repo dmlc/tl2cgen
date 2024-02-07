@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2023 by Contributors
+ * Copyright (c) 2023-2024 by Contributors
  * \file typeinfo.h
  * \author Hyunsu Cho
  * \brief Look up C symbols corresponding to treelite::TypeInfo
@@ -9,7 +9,7 @@
 #define TL2CGEN_DETAIL_COMPILER_TEMPLATES_TYPEINFO_H_
 
 #include <tl2cgen/logging.h>
-#include <treelite/base.h>
+#include <treelite/enum/typeinfo.h>
 
 #include <string>
 

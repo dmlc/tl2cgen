@@ -3,7 +3,7 @@
 TL2cgen (TreeLite 2 C GENerator):
 Model compiler for decision tree ensembles
 """
-from .core import _py_version, annotate_branch, generate_c_code
+from .core import _dump_compiler_ast, _py_version, annotate_branch, generate_c_code
 from .create_shared import create_shared
 from .data import DMatrix
 from .exception import TL2cgenError
@@ -21,6 +21,7 @@ __all__ = [
     "generate_c_code",
     "generate_cmakelists",
     "generate_makefile",
+    "_dump_compiler_ast",
     "DMatrix",
     "Predictor",
     "TL2cgenError",

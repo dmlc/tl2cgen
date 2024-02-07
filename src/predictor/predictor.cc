@@ -23,10 +23,10 @@ inline double GetTime() {
 }
 
 inline std::vector<std::size_t> SplitBatch(tl2cgen::DMatrix const* dmat, std::size_t split_factor) {
-  const std::size_t num_row = dmat->GetNumRow();
+  std::size_t const num_row = dmat->GetNumRow();
   TL2CGEN_CHECK_LE(split_factor, num_row);
-  const std::size_t portion = num_row / split_factor;
-  const std::size_t remainder = num_row % split_factor;
+  std::size_t const portion = num_row / split_factor;
+  std::size_t const remainder = num_row % split_factor;
   std::vector<std::size_t> workload(split_factor, portion);
   std::vector<std::size_t> row_ptr(split_factor + 1, 0);
   for (std::size_t i = 0; i < remainder; ++i) {
@@ -62,10 +62,10 @@ Predictor::Predictor(char const* libpath, int num_worker_thread) {
   num_feature_ = num_feature_query_func();
   TL2CGEN_CHECK_GT(num_feature_, 0) << "num_feature cannot be zero";
 
-  /* 3. query # of pred_transform name */
-  auto* pred_transform_query_func
-      = lib_->LoadFunctionWithSignature<StringQueryFunc>("get_pred_transform");
-  pred_transform_ = pred_transform_query_func();
+  /* 3. Query postprocessor */
+  auto* postprocessor_query_func
+      = lib_->LoadFunctionWithSignature<StringQueryFunc>("get_postprocessor");
+  postprocessor_ = postprocessor_query_func();
 
   /* 4. query # of sigmoid_alpha */
   auto* sigmoid_alpha_query_func
@@ -97,14 +97,14 @@ Predictor::Predictor(char const* libpath, int num_worker_thread) {
 
 std::size_t Predictor::PredictBatch(
     DMatrix const* dmat, int verbose, bool pred_margin, OutputBuffer* out_result) const {
-  const std::size_t num_row = dmat->GetNumRow();
+  std::size_t const num_row = dmat->GetNumRow();
   if (num_row == 0) {
     return 0;
   }
   double const tstart = GetTime();
   // Reduce nthread if n_row is small
-  const std::size_t nthread = std::min(static_cast<std::size_t>(thread_config_.nthread), num_row);
-  const std::vector<std::size_t> row_ptr = SplitBatch(dmat, nthread);
+  std::size_t const nthread = std::min(static_cast<std::size_t>(thread_config_.nthread), num_row);
+  std::vector<std::size_t> const row_ptr = SplitBatch(dmat, nthread);
   std::size_t total_size = 0;
   std::vector<std::size_t> result_size(nthread);
   tl2cgen::detail::threading_utils::ParallelFor(std::size_t(0), nthread, thread_config_,
@@ -122,7 +122,7 @@ std::size_t Predictor::PredictBatch(
   if (total_size < QueryResultSize(dmat, 0, num_row)) {
     TL2CGEN_CHECK_GT(num_class_, 1);
     TL2CGEN_CHECK_EQ(total_size % num_row, 0);
-    const std::size_t query_size_per_instance = total_size / num_row;
+    std::size_t const query_size_per_instance = total_size / num_row;
     TL2CGEN_CHECK_GT(query_size_per_instance, 0);
     TL2CGEN_CHECK_LT(query_size_per_instance, num_class_);
     std::visit(

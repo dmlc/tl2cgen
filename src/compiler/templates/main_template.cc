@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2023 by Contributors
+ * Copyright (c) 2023-2024 by Contributors
  * \file main_template.cc
  * \author Hyunsu Cho
  * \brief Template for main function
@@ -19,8 +19,8 @@ size_t get_num_feature(void) {{
   return {num_feature};
 }}
 
-const char* get_pred_transform(void) {{
-  return "{pred_transform}";
+const char* get_postprocessor(void) {{
+  return "{postprocessor}";
 }}
 
 float get_sigmoid_alpha(void) {{
@@ -52,7 +52,7 @@ char const* const main_start_template =
 
 {query_functions_definition}
 
-{pred_transform_function}
+{postprocessor_function}
 {predict_function_signature} {{
 )TL2CGENTEMPLATE";
 
@@ -62,7 +62,7 @@ char const* const main_end_multiclass_template =
     result[i] = sum[i]{optional_average_field} + ({leaf_output_type})({global_bias});
   }}
   if (!pred_margin) {{
-    return pred_transform(result);
+    return postprocess(result);
   }} else {{
     return {num_class};
   }}
@@ -73,7 +73,7 @@ char const* const main_end_template =
     R"TL2CGENTEMPLATE(
   sum = sum{optional_average_field} + ({leaf_output_type})({global_bias});
   if (!pred_margin) {{
-    return pred_transform(sum);
+    return postprocess(sum);
   }} else {{
     return sum;
   }}

@@ -1,7 +1,7 @@
 include(FetchContent)
 
 # Treelite
-find_package(Treelite 3.4.0)
+find_package(Treelite 4.0.0)
 if (Treelite_FOUND)
   set(TREELITE_FROM_SYSTEM_ROOT TRUE)
   set(TREELITE_LIB treelite::treelite)
@@ -10,11 +10,11 @@ else ()
   FetchContent_Declare(
     treelite
     GIT_REPOSITORY https://github.com/dmlc/treelite.git
-    GIT_TAG 3.9.0
+    GIT_TAG 4.0.0
   )
   set(Treelite_BUILD_STATIC_LIBS ON)
   FetchContent_MakeAvailable(treelite)
-  set_target_properties(treelite treelite_runtime PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  set_target_properties(treelite PROPERTIES EXCLUDE_FROM_ALL TRUE)
   target_include_directories(treelite_static PUBLIC
       $<BUILD_INTERFACE:${treelite_SOURCE_DIR}/include>
       $<BUILD_INTERFACE:${treelite_BINARY_DIR}/include>

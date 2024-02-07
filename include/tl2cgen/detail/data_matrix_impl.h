@@ -37,7 +37,7 @@ class DenseDMatrix {
         num_row_{num_row},
         num_col_{num_col} {
     auto const* data_ptr = static_cast<ElementType const*>(data);
-    const std::size_t num_elem = num_row * num_col;
+    std::size_t const num_elem = num_row * num_col;
     data_ = std::vector<ElementType>{data_ptr, data_ptr + num_elem};
   }
   DenseDMatrix(void const*, std::uint32_t const*, std::size_t const*, std::size_t, std::size_t) {
@@ -79,7 +79,7 @@ class CSRDMatrix {
       std::size_t num_row, std::size_t num_col)
       : num_row_{num_row}, num_col_{num_col} {
     auto const* data_ptr = static_cast<ElementType const*>(data);
-    const std::size_t num_elem = row_ptr[num_row];
+    std::size_t const num_elem = row_ptr[num_row];
     data_ = std::vector<ElementType>{data_ptr, data_ptr + num_elem};
     col_ind_ = std::vector<std::uint32_t>{col_ind, col_ind + num_elem};
     row_ptr_ = std::vector<std::size_t>{row_ptr, row_ptr + num_row + 1};

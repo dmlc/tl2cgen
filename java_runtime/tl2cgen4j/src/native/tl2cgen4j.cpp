@@ -503,7 +503,7 @@ JNIEXPORT jint JNICALL Java_ml_dmlc_tl2cgen4j_java_TL2cgenJNI_TL2cgenPredictorQu
     JNIEnv* jenv, jclass jcls, jlong jpredictor, jobjectArray jout) {
   TL2cgenPredictorHandle predictor = reinterpret_cast<TL2cgenPredictorHandle>(jpredictor);
   char const* leaf_output_type = nullptr;
-  const jint ret = (jint)TL2cgenPredictorQueryLeafOutputType(predictor, &leaf_output_type);
+  jint const ret = (jint)TL2cgenPredictorQueryLeafOutputType(predictor, &leaf_output_type);
   // store data
   jstring out = nullptr;
   if (leaf_output_type != nullptr) {

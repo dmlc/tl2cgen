@@ -1,21 +1,20 @@
 /*!
- * Copyright (c) by 2023 Contributors
+ * Copyright (c) by 2023-2024 Contributors
  * \file format_util.h
  * \brief Formatting utilities
  * \author Hyunsu Cho
  */
-#ifndef TL2CGEN_DETAIL_COMPILER_UTIL_FORMAT_UTIL_H_
-#define TL2CGEN_DETAIL_COMPILER_UTIL_FORMAT_UTIL_H_
+#ifndef TL2CGEN_DETAIL_COMPILER_CODEGEN_FORMAT_UTIL_H_
+#define TL2CGEN_DETAIL_COMPILER_CODEGEN_FORMAT_UTIL_H_
 
 #include <fmt/format.h>
 
-#include <cstddef>
 #include <iomanip>
 #include <limits>
 #include <sstream>
 #include <string>
 
-namespace tl2cgen::compiler::detail::util {
+namespace tl2cgen::compiler::detail::codegen {
 
 /*!
  * \brief Apply indentation to a multi-line string by inserting spaces at the beginning of each line
@@ -23,21 +22,17 @@ namespace tl2cgen::compiler::detail::util {
  * \param indent Indent level to be applied (in number of spaces)
  * \return Indented string
  */
-inline std::string IndentMultiLineString(std::string const& str, std::size_t indent) {
+inline std::string IndentMultiLineString(std::string const& str, int indent) {
+  std::istringstream iss{str};
   std::ostringstream oss;
-  if (str[0] != '\n') {
-    oss << std::string(indent, ' ');
-  }
-  bool need_indent = false;
-  // one or more newlines will cause empty spaces to be inserted as indent
-  for (char c : str) {  // assume UNIX-style line ending
-    if (c == '\n') {
-      need_indent = true;
-    } else if (need_indent) {
-      oss << std::string(indent, ' ');
-      need_indent = false;
+  bool first_line = true;
+  for (std::string line; std::getline(iss, line, '\n');) {
+    if (first_line) {
+      first_line = false;
+    } else {
+      oss << "\n";
     }
-    oss << c;
+    oss << std::string(indent, ' ') << line;
   }
   return oss.str();
 }
@@ -53,17 +48,17 @@ inline std::string ToStringHighPrecision(T value) {
   return fmt::format("{:.{}g}", value, std::numeric_limits<T>::max_digits10 + 2);
 }
 
-/*! \brief format array as text, wrapped to a given maximum text width. Uses high precision to
+/*! \brief Format array as text, wrapped to a given maximum text width. Uses high precision to
  *         render floating-point values. */
 class ArrayFormatter {
  public:
   /*!
-   * \brief constructor
+   * \brief Constructor
    * \param text_width maximum text width
    * \param indent indentation level
    * \param delimiter delimiter between elements
    */
-  ArrayFormatter(size_t text_width, size_t indent, char delimiter = ',')
+  ArrayFormatter(int text_width, int indent, char delimiter = ',')
       : oss_(),
         text_width_(text_width),
         indent_(indent),
@@ -84,7 +79,7 @@ class ArrayFormatter {
     }
     std::ostringstream tmp;
     tmp << std::setprecision(GetPrecision<T>()) << e << delimiter_ << " ";
-    const std::string token = tmp.str();  // token to be added to wrapped text
+    std::string const token = tmp.str();  // token to be added to wrapped text
     if (line_length_ + token.length() <= text_width_) {
       oss_ << token;
       line_length_ += token.length();
@@ -96,8 +91,8 @@ class ArrayFormatter {
   }
 
   /*!
-   * \brief obtain formatted text containing the rendered array
-   * \return string representing the rendered array
+   * \brief Obtain formatted text containing the rendered array
+   * \return String representing the rendered array
    */
   inline std::string str() {
     return oss_.str();
@@ -105,11 +100,11 @@ class ArrayFormatter {
 
  private:
   std::ostringstream oss_;  // string stream to store wrapped text
-  const size_t text_width_;  // maximum length of each line
-  const size_t indent_;  // indent level, to indent each line
+  int const text_width_;  // maximum length of each line
+  int const indent_;  // indent level, to indent each line
   char const delimiter_;  // delimiter (defaults to comma)
   int const default_precision_;  // default precision used by string stream
-  size_t line_length_;  // width of current line
+  int line_length_;  // width of current line
   bool is_empty_;  // true if no entry has been added yet
 
   template <typename T>
@@ -127,6 +122,6 @@ inline int ArrayFormatter::GetPrecision<double>() {
   return std::numeric_limits<double>::digits10 + 2;
 }
 
-}  // namespace tl2cgen::compiler::detail::util
+}  // namespace tl2cgen::compiler::detail::codegen
 
-#endif  // TL2CGEN_DETAIL_COMPILER_UTIL_FORMAT_UTIL_H_
+#endif  // TL2CGEN_DETAIL_COMPILER_CODEGEN_FORMAT_UTIL_H_

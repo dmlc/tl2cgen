@@ -19,6 +19,7 @@
 #include <treelite/tree.h>
 
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -78,50 +79,31 @@ int TL2cgenAnnotationFree(TL2cgenAnnotationHandle handle) {
   API_END();
 }
 
-int TL2cgenCompilerCreate(
-    char const* name, char const* params_json_str, TL2cgenCompilerHandle* out) {
-  API_BEGIN();
-  std::unique_ptr<Compiler> compiler{Compiler::Create(name, params_json_str)};
-  *out = static_cast<TL2cgenCompilerHandle>(compiler.release());
-  API_END();
-}
-
-int TL2cgenCompilerGenerateCode(
-    TL2cgenCompilerHandle compiler, TL2cgenModelHandle model, char const* dirpath) {
+int TL2cgenGenerateCode(
+    TL2cgenModelHandle model, char const* compiler_params_json_str, char const* dirpath) {
   API_BEGIN();
   treelite::Model const* model_ = static_cast<treelite::Model*>(model);
-  auto* compiler_ = static_cast<Compiler*>(compiler);
   TL2CGEN_CHECK(model_);
-  TL2CGEN_CHECK(compiler_);
-  compiler::CompilerParam param = compiler_->QueryParam();
 
-  // create directory named dirpath
-  std::string const& dirpath_(dirpath);
-  detail::filesystem::CreateDirectoryIfNotExist(dirpath);
+  std::filesystem::path dirpath_
+      = std::filesystem::weakly_canonical(std::filesystem::u8path(std::string(dirpath)));
+  detail::filesystem::CreateDirectoryIfNotExist(dirpath_);
 
-  /* compile model */
-  auto compiled_model = compiler_->Compile(*model_);
-  if (param.verbose > 0) {
-    TL2CGEN_LOG(INFO) << "Code generation finished. Writing code to files...";
-  }
-
-  for (auto const& it : compiled_model.files) {
-    if (param.verbose > 0) {
-      TL2CGEN_LOG(INFO) << "Writing file " << it.first << "...";
-    }
-    const std::string filename_full = dirpath_ + "/" + it.first;
-    if (it.second.is_binary) {
-      detail::filesystem::WriteToFile(filename_full, it.second.content_binary);
-    } else {
-      detail::filesystem::WriteToFile(filename_full, it.second.content);
-    }
-  }
+  /* Compile model */
+  auto param = compiler::CompilerParam::ParseFromJSON(compiler_params_json_str);
+  compiler::CompileModel(*model_, param, dirpath_);
   API_END();
 }
 
-int TL2cgenCompilerFree(TL2cgenCompilerHandle handle) {
+TL2CGEN_DLL int TL2cgenDumpAST(
+    TL2cgenModelHandle model, char const* compiler_params_json_str, char const** out_dump_str) {
   API_BEGIN();
-  delete static_cast<Compiler*>(handle);
+  treelite::Model const* model_ = static_cast<treelite::Model*>(model);
+  TL2CGEN_CHECK(model_);
+  auto param = compiler::CompilerParam::ParseFromJSON(compiler_params_json_str);
+  std::string& ret_str = TL2cgenAPIThreadLocalStore::Get()->ret_str;
+  ret_str = compiler::DumpAST(*model_, param);
+  *out_dump_str = ret_str.c_str();
   API_END();
 }
 
@@ -175,8 +157,8 @@ int TL2cgenPredictorPredictBatch(TL2cgenPredictorHandle predictor, TL2cgenDMatri
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
   auto const* dmat_ = static_cast<DMatrix const*>(dmat);
   auto* out_buffer_ = static_cast<predictor::OutputBuffer*>(out_result);
-  const size_t num_feature = predictor_->QueryNumFeature();
-  const std::string err_msg = std::string(
+  size_t const num_feature = predictor_->QueryNumFeature();
+  std::string const err_msg = std::string(
                                   "Too many columns (features) in the data matrix. "
                                   "Number of features must not exceed ")
                               + std::to_string(num_feature);
@@ -235,12 +217,12 @@ int TL2cgenPredictorQueryNumFeature(TL2cgenPredictorHandle predictor, size_t* ou
   API_END();
 }
 
-int TL2cgenPredictorQueryPredTransform(TL2cgenPredictorHandle predictor, char const** out) {
+int TL2cgenPredictorQueryPostprocessor(TL2cgenPredictorHandle predictor, char const** out) {
   API_BEGIN()
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  auto pred_transform = predictor_->QueryPredTransform();
+  auto postprocessor = predictor_->QueryPostprocessor();
   std::string& ret_str = TL2cgenAPIThreadLocalStore::Get()->ret_str;
-  ret_str = pred_transform;
+  ret_str = postprocessor;
   *out = ret_str.c_str();
   API_END();
 }

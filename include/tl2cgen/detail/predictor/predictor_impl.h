@@ -165,8 +165,8 @@ inline std::size_t ApplyBatch(CSRDMatrix<ElementType> const* dmat, int num_featu
   std::size_t const* row_ptr = dmat->row_ptr_.data();
   std::size_t total_output_size = 0;
   for (std::size_t rid = rbegin; rid < rend; ++rid) {
-    const std::size_t ibegin = row_ptr[rid];
-    const std::size_t iend = row_ptr[rid + 1];
+    std::size_t const ibegin = row_ptr[rid];
+    std::size_t const iend = row_ptr[rid + 1];
     for (std::size_t i = ibegin; i < iend; ++i) {
       inst[col_ind[i]].fvalue = static_cast<ThresholdType>(data[i]);
     }
@@ -186,8 +186,8 @@ inline std::size_t ApplyBatch(DenseDMatrix<ElementType> const* dmat, int num_fea
   std::vector<Entry<ThresholdType>> inst(
       std::max(dmat->num_col_, static_cast<std::size_t>(num_feature)), {-1});
   TL2CGEN_CHECK(rbegin < rend && rend <= dmat->num_row_);
-  const std::size_t num_col = dmat->num_col_;
-  const ElementType missing_value = dmat->missing_value_;
+  std::size_t const num_col = dmat->num_col_;
+  ElementType const missing_value = dmat->missing_value_;
   ElementType const* data = dmat->data_.data();
   ElementType const* row = nullptr;
   std::size_t total_output_size = 0;
