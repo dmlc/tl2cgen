@@ -17,6 +17,8 @@ namespace tl2cgen::compiler::detail::ast {
 
 void ASTBuilder::BuildAST(treelite::Model const& model) {
   main_node_ = AddNode<MainNode>(nullptr, model.base_scores.AsVector());
+  meta_.num_target_ = model.num_target;
+  meta_.num_class_ = model.num_class.AsVector();
   meta_.leaf_vector_shape_ = {model.leaf_vector_shape[0], model.leaf_vector_shape[1]};
   meta_.num_feature_ = model.num_feature;
 

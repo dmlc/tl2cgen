@@ -122,10 +122,12 @@ class OutputNode : public ASTNode {
 // Metadata about the model
 class ModelMeta {
  public:
-  std::vector<bool> is_categorical_;
-  // is_categorical_[i]: is feature i categorical?
+  std::int32_t num_target_;  // Number of output targets
+  std::vector<std::int32_t> num_class_;  // num_class[i]: Number of classes in i-th target
   std::array<std::int32_t, 2> leaf_vector_shape_;  // Shape of each leaf output
   std::int32_t num_feature_;  // Number of features in the training data
+  std::vector<bool> is_categorical_;
+  // is_categorical_[i]: is feature i categorical?
   template <typename ThresholdType, typename LeafOutputType>
   class TypeMeta {
    public:

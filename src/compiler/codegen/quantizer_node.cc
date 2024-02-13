@@ -15,12 +15,10 @@ using namespace fmt::literals;
 
 namespace {
 
-char const* const quantize_function_signature =
-    R"TL2CGENTEMPLATE(
-int quantize({threshold_type} val, unsigned fid);
-)TL2CGENTEMPLATE";
+char const* const quantize_function_signature_template
+    = "int quantize({threshold_type} val, unsigned fid)";
 
-char const* const quantize_function =
+char const* const quantize_function_template =
     R"TL2CGENTEMPLATE(
 /*
  * \brief Function to convert a feature value into bin index.
@@ -28,7 +26,7 @@ char const* const quantize_function =
  * \param fid Feature identifier
  * \return bin Index corresponding to given feature value
  */
-int quantize({threshold_type} val, unsigned fid) {{
+{quantize_function_signature} {{
   const size_t offset = th_begin[fid];
   const {threshold_type}* array = &threshold[offset];
   int len = th_len[fid];
@@ -70,6 +68,23 @@ for (int i = 0; i < {num_feature}; ++i) {{
     data[i].qvalue = quantize(data[i].fvalue, i);
   }}
 }}
+)TL2CGENTEMPLATE";
+
+char const* const quantize_arrays_template =
+    R"TL2CGENTEMPLATE(
+#include "header.h"
+
+static const {threshold_type} threshold[] = {{
+{array_threshold}
+}};
+
+static const int th_begin[] = {{
+{array_th_begin}
+}};
+
+static const int th_len[] = {{
+{array_th_len}
+}};
 )TL2CGENTEMPLATE";
 
 }  // anonymous namespace
@@ -132,26 +147,16 @@ void HandleQuantizerNode(ast::QuantizerNode const* node, CodeCollection& gencode
         fmt::format(quantize_loop_template, "num_feature"_a = node->meta_->num_feature_));
 
     gencode.SwitchToSourceFile("header.h");
-    gencode.PushFragment(
-        fmt::format(quantize_function_signature, "threshold_type"_a = threshold_ctype_str));
+    std::string const quantize_function_signature = fmt::format(
+        quantize_function_signature_template, "threshold_type"_a = threshold_ctype_str);
+    gencode.PushFragment(fmt::format("{};", quantize_function_signature));
 
     gencode.SwitchToSourceFile("quantize.c");
-    gencode.PushFragment(
-        fmt::format("static const {threshold_type} threshold[] = {{\n"
-                    "{array_threshold}\n"
-                    "}};\n",
-            "array_threshold"_a = array_threshold, "threshold_type"_a = threshold_ctype_str));
-    gencode.PushFragment(
-        fmt::format("static const int th_begin[] = {{\n"
-                    "{array_th_begin}\n"
-                    "}};\n",
-            "array_th_begin"_a = array_th_begin));
-    gencode.PushFragment(
-        fmt::format("static const int th_len[] = {{\n"
-                    "{array_th_len}\n"
-                    "}};\n",
-            "array_th_len"_a = array_th_len));
-    gencode.PushFragment(fmt::format(quantize_function,
+    gencode.PushFragment(fmt::format(quantize_arrays_template,
+        "array_threshold"_a = array_threshold, "threshold_type"_a = threshold_ctype_str,
+        "array_th_begin"_a = array_th_begin, "array_th_len"_a = array_th_len));
+    gencode.PushFragment(fmt::format(quantize_function_template,
+        "quantize_function_signature"_a = quantize_function_signature,
         "total_num_threshold"_a = total_num_threshold, "threshold_type"_a = threshold_ctype_str));
     gencode.SwitchToSourceFile(current_file);  // Switch back context
   }

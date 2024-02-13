@@ -11,6 +11,7 @@
 #include <tl2cgen/detail/compiler/codegen/format_util.h>
 #include <tl2cgen/logging.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <variant>
 
@@ -56,6 +57,9 @@ char const* const header_template =
 #define UNLIKELY(x) (x)
 #endif
 
+#define N_TARGET {num_target}
+#define MAX_N_CLASS {max_num_class}
+
 union Entry {{
   int missing;
   {threshold_type} fvalue;
@@ -78,9 +82,13 @@ void predict(union Entry* data, int pred_margin, {threshold_type}* result) {{
 
 void HandleMainNode(ast::MainNode const* node, CodeCollection& gencode) {
   auto threshold_ctype_str = GetThresholdCType(node);
+  std::int32_t const max_num_class
+      = *std::max_element(node->meta_->num_class_.begin(), node->meta_->num_class_.end());
+
   gencode.SwitchToSourceFile("header.h");
   gencode.PushFragment(fmt::format(header_template, "threshold_type"_a = threshold_ctype_str,
-      "dllexport"_a = DLLEXPORT_KEYWORD,
+      "dllexport"_a = DLLEXPORT_KEYWORD, "num_target"_a = node->meta_->num_target_,
+      "max_num_class"_a = max_num_class,
       "extern_array_is_categorical"_a
       = (!node->meta_->is_categorical_.empty() ? "extern const unsigned char is_categorical[];"
                                                : "")));

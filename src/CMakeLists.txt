@@ -98,11 +98,7 @@ target_sources(obj_tl2cgen
     compiler/codegen/output_node.cc
     compiler/codegen/quantizer_node.cc
     compiler/codegen/translation_unit_node.cc
-    compiler/templates/code_folder_template.cc
-    compiler/templates/header_template.cc
-    compiler/templates/main_template.cc
     compiler/templates/postprocessor.cc
-    compiler/templates/qnode_template.cc
     predictor/predictor.cc
     predictor/shared_library.cc
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/annotator.h
@@ -126,11 +122,7 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast/builder.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/codegen/codegen.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/codegen/format_util.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/code_folder_template.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/header_template.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/main_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/postprocessor.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/qnode_template.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/typeinfo.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/predictor_impl.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/shared_library.h
