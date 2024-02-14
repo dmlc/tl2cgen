@@ -94,10 +94,15 @@ def format_libpath_for_example_model(
 
 def load_example_model(example_id: str) -> treelite.Model:
     """Load an example model"""
-    return treelite.Model.load(
-        example_model_db[example_id].model,
-        model_format=example_model_db[example_id].format,
-    )
+    if example_model_db[example_id].format == "xgboost":
+        return treelite.frontend.load_xgboost_model_legacy_binary(
+            example_model_db[example_id].model
+        )
+    if example_model_db[example_id].format == "xgboost_json":
+        return treelite.frontend.load_xgboost_model(example_model_db[example_id].model)
+    if example_model_db[example_id].format == "lightgbm":
+        return treelite.frontend.load_lightgbm_model(example_model_db[example_id].model)
+    raise ValueError("Unknown model format")
 
 
 example_model_db = {
