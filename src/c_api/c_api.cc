@@ -18,7 +18,9 @@
 #include <tl2cgen/thread_local.h>
 #include <treelite/tree.h>
 
+#include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -28,10 +30,12 @@ using namespace tl2cgen;  // NOLINT(build/namespaces)
 
 namespace {
 
-/*! \brief entry to to easily hold returning information */
+/*! \brief Entry to to easily hold returning information */
 struct TL2CgenAPIThreadLocalEntry {
-  /*! \brief result holder for returning string */
+  /*! \brief Result holder for returning string */
   std::string ret_str;
+  /*! \brief Result holder for returning dimensions */
+  std::vector<std::uint64_t> ret_shape;
 };
 
 // thread-local store for returning strings
@@ -107,8 +111,8 @@ TL2CGEN_DLL int TL2cgenDumpAST(
 }
 
 int TL2cgenDMatrixCreateFromCSR(void const* data, char const* data_type_str,
-    std::uint32_t const* col_ind, std::size_t const* row_ptr, std::size_t num_row,
-    std::size_t num_col, TL2cgenDMatrixHandle* out) {
+    std::uint32_t const* col_ind, std::uint64_t const* row_ptr, std::uint64_t num_row,
+    std::uint64_t num_col, TL2cgenDMatrixHandle* out) {
   API_BEGIN();
   std::unique_ptr<DMatrix> matrix = DMatrix::Create(DMatrixTypeEnum::kSparseCSR,
       DMatrixElementTypeFromString(data_type_str), data, col_ind, row_ptr, num_row, num_col);
@@ -116,8 +120,8 @@ int TL2cgenDMatrixCreateFromCSR(void const* data, char const* data_type_str,
   API_END();
 }
 
-int TL2cgenDMatrixCreateFromMat(void const* data, char const* data_type_str, std::size_t num_row,
-    std::size_t num_col, void const* missing_value, TL2cgenDMatrixHandle* out) {
+int TL2cgenDMatrixCreateFromMat(void const* data, char const* data_type_str, std::uint64_t num_row,
+    std::uint64_t num_col, void const* missing_value, TL2cgenDMatrixHandle* out) {
   API_BEGIN();
   std::unique_ptr<DMatrix> matrix = DMatrix::Create(DMatrixTypeEnum::kDenseCLayout,
       DMatrixElementTypeFromString(data_type_str), data, missing_value, num_row, num_col);
@@ -125,8 +129,8 @@ int TL2cgenDMatrixCreateFromMat(void const* data, char const* data_type_str, std
   API_END();
 }
 
-int TL2cgenDMatrixGetDimension(TL2cgenDMatrixHandle handle, std::size_t* out_num_row,
-    std::size_t* out_num_col, std::size_t* out_nelem) {
+int TL2cgenDMatrixGetDimension(TL2cgenDMatrixHandle handle, std::uint64_t* out_num_row,
+    std::uint64_t* out_num_col, std::uint64_t* out_nelem) {
   API_BEGIN();
   DMatrix const* dmat = static_cast<DMatrix*>(handle);
   *out_num_row = dmat->GetNumRow();
@@ -150,118 +154,69 @@ int TL2cgenPredictorLoad(
 }
 
 int TL2cgenPredictorPredictBatch(TL2cgenPredictorHandle predictor, TL2cgenDMatrixHandle dmat,
-    int verbose, int pred_margin, TL2cgenPredictorOutputHandle out_result,
-    std::size_t* out_result_size) {
+    int verbose, int pred_margin, void* out_result) {
   API_BEGIN();
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
   auto const* dmat_ = static_cast<DMatrix const*>(dmat);
-  auto* out_buffer_ = static_cast<predictor::OutputBuffer*>(out_result);
-  size_t const num_feature = predictor_->QueryNumFeature();
+  std::size_t const num_feature = predictor_->GetNumFeature();
   std::string const err_msg = std::string(
                                   "Too many columns (features) in the data matrix. "
                                   "Number of features must not exceed ")
                               + std::to_string(num_feature);
   TL2CGEN_CHECK_LE(dmat_->GetNumCol(), num_feature) << err_msg;
-  *out_result_size = predictor_->PredictBatch(dmat_, verbose, (pred_margin != 0), out_buffer_);
+  predictor_->PredictBatch(dmat_, verbose, (pred_margin != 0), out_result);
   API_END();
 }
 
-int TL2cgenPredictorCreateOutputVector(TL2cgenPredictorHandle predictor, TL2cgenDMatrixHandle dmat,
-    TL2cgenPredictorOutputHandle* out_output_vector) {
+int TL2cgenPredictorGetOutputShape(TL2cgenPredictorHandle predictor, TL2cgenDMatrixHandle dmat,
+    std::uint64_t const** out_shape, std::uint64_t* out_ndim) {
   API_BEGIN();
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
   auto const* dmat_ = static_cast<DMatrix const*>(dmat);
-  std::unique_ptr<predictor::OutputBuffer> out_buffer = std::make_unique<predictor::OutputBuffer>(
-      predictor::DataTypeFromString(predictor_->QueryLeafOutputType()),
-      predictor_->QueryResultSize(dmat_));
-  *out_output_vector = static_cast<TL2cgenPredictorOutputHandle>(out_buffer.release());
+  std::vector<std::uint64_t>& ret_shape = TL2cgenAPIThreadLocalStore::Get()->ret_shape;
+  ret_shape = predictor_->GetOutputShape(dmat_);
+  *out_shape = ret_shape.data();
+  *out_ndim = ret_shape.size();
   API_END();
 }
 
-int TL2cgenPredictorGetRawPointerFromOutputVector(
-    TL2cgenPredictorOutputHandle output_vector, void const** out_ptr) {
-  API_BEGIN();
-  auto* output_vector_ = static_cast<predictor::OutputBuffer*>(output_vector);
-  *out_ptr = output_vector_->data();
-  API_END();
-}
-
-int TL2cgenPredictorDeleteOutputVector(TL2cgenPredictorOutputHandle output_vector) {
-  API_BEGIN();
-  auto* output_vector_ = static_cast<predictor::OutputBuffer*>(output_vector);
-  delete output_vector_;
-  API_END();
-}
-
-int TL2cgenPredictorQueryResultSize(
-    TL2cgenPredictorHandle predictor, TL2cgenDMatrixHandle dmat, std::size_t* out) {
-  API_BEGIN();
-  auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  auto const* dmat_ = static_cast<DMatrix const*>(dmat);
-  *out = predictor_->QueryResultSize(dmat_);
-  API_END();
-}
-
-int TL2cgenPredictorQueryNumClass(TL2cgenPredictorHandle predictor, size_t* out) {
-  API_BEGIN();
-  auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  *out = predictor_->QueryNumClass();
-  API_END();
-}
-
-int TL2cgenPredictorQueryNumFeature(TL2cgenPredictorHandle predictor, size_t* out) {
-  API_BEGIN();
-  auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  *out = predictor_->QueryNumFeature();
-  API_END();
-}
-
-int TL2cgenPredictorQueryPostprocessor(TL2cgenPredictorHandle predictor, char const** out) {
+int TL2cgenPredictorGetThresholdType(TL2cgenPredictorHandle predictor, char const** out) {
   API_BEGIN()
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  auto postprocessor = predictor_->QueryPostprocessor();
   std::string& ret_str = TL2cgenAPIThreadLocalStore::Get()->ret_str;
-  ret_str = postprocessor;
+  ret_str = predictor_->GetThresholdType();
   *out = ret_str.c_str();
   API_END();
 }
 
-int TL2cgenPredictorQuerySigmoidAlpha(TL2cgenPredictorHandle predictor, float* out) {
-  API_BEGIN()
-  auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  *out = predictor_->QuerySigmoidAlpha();
-  API_END();
-}
-
-int TL2cgenPredictorQueryRatioC(TL2cgenPredictorHandle predictor, float* out) {
-  API_BEGIN()
-  auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  *out = predictor_->QueryRatioC();
-  API_END();
-}
-
-int TL2cgenPredictorQueryGlobalBias(TL2cgenPredictorHandle predictor, float* out) {
-  API_BEGIN()
-  auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  *out = predictor_->QueryGlobalBias();
-  API_END();
-}
-
-int TL2cgenPredictorQueryThresholdType(TL2cgenPredictorHandle predictor, char const** out) {
+int TL2cgenPredictorGetLeafOutputType(TL2cgenPredictorHandle predictor, char const** out) {
   API_BEGIN()
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
   std::string& ret_str = TL2cgenAPIThreadLocalStore::Get()->ret_str;
-  ret_str = predictor_->QueryThresholdType();
+  ret_str = predictor_->GetLeafOutputType();
   *out = ret_str.c_str();
   API_END();
 }
 
-int TL2cgenPredictorQueryLeafOutputType(TL2cgenPredictorHandle predictor, char const** out) {
-  API_BEGIN()
+int TL2cgenPredictorGetNumFeature(TL2cgenPredictorHandle predictor, std::int32_t* out) {
+  API_BEGIN();
   auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
-  std::string& ret_str = TL2cgenAPIThreadLocalStore::Get()->ret_str;
-  ret_str = predictor_->QueryLeafOutputType();
-  *out = ret_str.c_str();
+  *out = predictor_->GetNumFeature();
+  API_END();
+}
+
+int TL2cgenPredictorGetNumTarget(TL2cgenPredictorHandle predictor, int32_t* out) {
+  API_BEGIN();
+  auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
+  *out = predictor_->GetNumTarget();
+  API_END();
+}
+
+int TL2cgenPredictorGetNumClass(TL2cgenPredictorHandle predictor, int32_t* out) {
+  API_BEGIN();
+  auto const* predictor_ = static_cast<predictor::Predictor const*>(predictor);
+  auto num_class = predictor_->GetNumClass();
+  std::copy(num_class.begin(), num_class.end(), out);
   API_END();
 }
 

@@ -1,15 +1,14 @@
 """Internal classes to hold native handles"""
+
 import ctypes
 import pathlib
 from typing import Union
 
-import numpy as np
 import treelite
 
 from .data import DMatrix
-from .dtypes import type_info_to_ctypes_type
 from .libloader import _LIB, _check_call
-from .util import c_str, py_str
+from .util import c_str
 
 
 class _TreeliteModel:
@@ -82,52 +81,3 @@ class _Annotator:
         if self.handle:
             _check_call(_LIB.TL2cgenAnnotationFree(self.handle))
             self.handle = None
-
-
-class _OutputVector:
-    """Output vector object, used to hold prediction results from Predictor"""
-
-    def __init__(
-        self,
-        predictor_handle: ctypes.c_void_p,
-        dmat_handle: ctypes.c_void_p,
-    ):
-        self.handle = ctypes.c_void_p()
-        _check_call(
-            _LIB.TL2cgenPredictorCreateOutputVector(
-                predictor_handle, dmat_handle, ctypes.byref(self.handle)
-            )
-        )
-        type_str = ctypes.c_char_p()
-        _check_call(
-            _LIB.TL2cgenPredictorQueryLeafOutputType(
-                predictor_handle, ctypes.byref(type_str)
-            )
-        )
-        self.typestr_ = py_str(type_str.value)
-        length = ctypes.c_size_t()
-        _check_call(
-            _LIB.TL2cgenPredictorQueryResultSize(
-                predictor_handle, dmat_handle, ctypes.byref(length)
-            )
-        )
-        self.length_ = length.value
-
-    def __del__(self):
-        if self.handle:
-            _check_call(_LIB.TL2cgenPredictorDeleteOutputVector(self.handle))
-            self.handle = None
-
-    def toarray(self):
-        """Convert to NumPy array"""
-        ptr = ctypes.c_void_p()
-        _check_call(
-            _LIB.TL2cgenPredictorGetRawPointerFromOutputVector(
-                self.handle, ctypes.byref(ptr)
-            )
-        )
-        ptr_type = ctypes.POINTER(type_info_to_ctypes_type(self.typestr_))
-        casted_ptr = ctypes.cast(ptr, ptr_type)
-        return np.copy(
-            np.ctypeslib.as_array(casted_ptr, shape=(self.length_,)), order="C"
-        )

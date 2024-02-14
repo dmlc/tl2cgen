@@ -45,15 +45,15 @@ class DMatrix {
  public:
   DMatrix() = default;
   explicit DMatrix(DMatrixVariant&& variant) : variant_{std::move(variant)} {}
-  std::size_t GetNumRow() const {
+  std::uint64_t GetNumRow() const {
     return std::visit(
         [](auto&& concrete_dmatrix) { return concrete_dmatrix.GetNumRow(); }, variant_);
   }
-  std::size_t GetNumCol() const {
+  std::uint64_t GetNumCol() const {
     return std::visit(
         [](auto&& concrete_dmatrix) { return concrete_dmatrix.GetNumCol(); }, variant_);
   }
-  std::size_t GetNumElem() const {
+  std::uint64_t GetNumElem() const {
     return std::visit(
         [](auto&& concrete_dmatrix) { return concrete_dmatrix.GetNumElem(); }, variant_);
   }

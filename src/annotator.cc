@@ -86,22 +86,22 @@ class ComputeBranchLooper<DenseDMatrix<ElementType>> {
  public:
   template <typename ThresholdType, typename LeafOutputType>
   static void Loop(treelite::ModelPreset<ThresholdType, LeafOutputType> const& model_preset,
-      DenseDMatrix<ElementType> const& dmat, std::size_t rbegin, std::size_t rend,
-      ThreadConfig const& thread_config, std::size_t const* count_row_ptr,
+      DenseDMatrix<ElementType> const& dmat, std::uint64_t rbegin, std::uint64_t rend,
+      ThreadConfig const& thread_config, std::uint64_t const* count_row_ptr,
       std::uint64_t* counts_tloc) {
     std::vector<Entry<ElementType>> inst(thread_config.nthread * dmat.num_col_, {-1});
-    std::size_t ntree = model_preset.trees.size();
+    std::uint64_t ntree = model_preset.trees.size();
     TL2CGEN_CHECK_LE(rbegin, rend);
-    std::size_t num_col = dmat.num_col_;
+    std::uint64_t num_col = dmat.num_col_;
     ElementType missing_value = dmat.missing_value_;
     bool nan_missing = tl2cgen::detail::math::CheckNAN(missing_value);
     auto sched = tl2cgen::detail::threading_utils::ParallelSchedule::Static();
     tl2cgen::detail::threading_utils::ParallelFor(
-        rbegin, rend, thread_config, sched, [&](std::size_t rid, int thread_id) {
+        rbegin, rend, thread_config, sched, [&](std::uint64_t rid, int thread_id) {
           const ElementType* row = &dmat.data_[rid * num_col];
-          const std::size_t off = dmat.num_col_ * thread_id;
-          const std::size_t off2 = count_row_ptr[ntree] * thread_id;
-          for (std::size_t j = 0; j < num_col; ++j) {
+          const std::uint64_t off = dmat.num_col_ * thread_id;
+          const std::uint64_t off2 = count_row_ptr[ntree] * thread_id;
+          for (std::uint64_t j = 0; j < num_col; ++j) {
             if (tl2cgen::detail::math::CheckNAN(row[j])) {
               TL2CGEN_CHECK(nan_missing) << "The missing_value argument must be set to NaN if "
                                             "there is any NaN in the matrix.";
@@ -109,11 +109,11 @@ class ComputeBranchLooper<DenseDMatrix<ElementType>> {
               inst[off + j].fvalue = row[j];
             }
           }
-          for (std::size_t tree_id = 0; tree_id < ntree; ++tree_id) {
+          for (std::uint64_t tree_id = 0; tree_id < ntree; ++tree_id) {
             Traverse(model_preset.trees[tree_id], &inst[off],
                 &counts_tloc[off2 + count_row_ptr[tree_id]]);
           }
-          for (std::size_t j = 0; j < num_col; ++j) {
+          for (std::uint64_t j = 0; j < num_col; ++j) {
             inst[off + j].missing = -1;
           }
         });
@@ -125,27 +125,27 @@ class ComputeBranchLooper<CSRDMatrix<ElementType>> {
  public:
   template <typename ThresholdType, typename LeafOutputType>
   static void Loop(treelite::ModelPreset<ThresholdType, LeafOutputType> const& model_preset,
-      CSRDMatrix<ElementType> const dmat, std::size_t rbegin, std::size_t rend,
-      ThreadConfig const& thread_config, std::size_t const* count_row_ptr,
+      CSRDMatrix<ElementType> const dmat, std::uint64_t rbegin, std::uint64_t rend,
+      ThreadConfig const& thread_config, std::uint64_t const* count_row_ptr,
       std::uint64_t* counts_tloc) {
     std::vector<Entry<ElementType>> inst(thread_config.nthread * dmat.num_col_, {-1});
-    std::size_t ntree = model_preset.trees.size();
+    std::uint64_t ntree = model_preset.trees.size();
     TL2CGEN_CHECK_LE(rbegin, rend);
     auto sched = tl2cgen::detail::threading_utils::ParallelSchedule::Static();
     tl2cgen::detail::threading_utils::ParallelFor(
-        rbegin, rend, thread_config, sched, [&](std::size_t rid, int thread_id) {
-          const std::size_t off = dmat.num_col_ * thread_id;
-          const std::size_t off2 = count_row_ptr[ntree] * thread_id;
-          const std::size_t ibegin = dmat.row_ptr_[rid];
-          const std::size_t iend = dmat.row_ptr_[rid + 1];
-          for (std::size_t i = ibegin; i < iend; ++i) {
+        rbegin, rend, thread_config, sched, [&](std::uint64_t rid, int thread_id) {
+          const std::uint64_t off = dmat.num_col_ * thread_id;
+          const std::uint64_t off2 = count_row_ptr[ntree] * thread_id;
+          const std::uint64_t ibegin = dmat.row_ptr_[rid];
+          const std::uint64_t iend = dmat.row_ptr_[rid + 1];
+          for (std::uint64_t i = ibegin; i < iend; ++i) {
             inst[off + dmat.col_ind_[i]].fvalue = dmat.data_[i];
           }
-          for (std::size_t tree_id = 0; tree_id < ntree; ++tree_id) {
+          for (std::uint64_t tree_id = 0; tree_id < ntree; ++tree_id) {
             Traverse(model_preset.trees[tree_id], &inst[off],
                 &counts_tloc[off2 + count_row_ptr[tree_id]]);
           }
-          for (std::size_t i = ibegin; i < iend; ++i) {
+          for (std::uint64_t i = ibegin; i < iend; ++i) {
             inst[off + dmat.col_ind_[i]].missing = -1;
           }
         });
@@ -154,8 +154,8 @@ class ComputeBranchLooper<CSRDMatrix<ElementType>> {
 
 template <typename ThresholdType, typename LeafOutputType>
 inline void ComputeBranchLoop(treelite::ModelPreset<ThresholdType, LeafOutputType> const& model,
-    tl2cgen::DMatrix const* dmat, std::size_t rbegin, std::size_t rend,
-    ThreadConfig const& thread_config, std::size_t const* count_row_ptr,
+    tl2cgen::DMatrix const* dmat, std::uint64_t rbegin, std::uint64_t rend,
+    ThreadConfig const& thread_config, std::uint64_t const* count_row_ptr,
     std::uint64_t* counts_tloc) {
   std::visit(
       [&model, rbegin, rend, &thread_config, count_row_ptr, counts_tloc](auto&& concrete_dmat) {
@@ -172,10 +172,10 @@ inline void AnnotateImpl(treelite::ModelPreset<ThresholdType, LeafOutputType> co
     std::vector<std::vector<std::uint64_t>>* out_counts) {
   std::vector<std::uint64_t> new_counts;
   std::vector<std::uint64_t> counts_tloc;
-  std::vector<std::size_t> count_row_ptr;
+  std::vector<std::uint64_t> count_row_ptr;
 
   count_row_ptr = {0};
-  std::size_t const ntree = model_preset.trees.size();
+  std::uint64_t const ntree = model_preset.trees.size();
   ThreadConfig thread_config = detail::threading_utils::ConfigureThreadConfig(nthread);
   for (treelite::Tree<ThresholdType, LeafOutputType> const& tree : model_preset.trees) {
     count_row_ptr.push_back(count_row_ptr.back() + tree.num_nodes);
@@ -183,11 +183,11 @@ inline void AnnotateImpl(treelite::ModelPreset<ThresholdType, LeafOutputType> co
   new_counts.resize(count_row_ptr[ntree], 0);
   counts_tloc.resize(count_row_ptr[ntree] * thread_config.nthread, 0);
 
-  std::size_t const num_row = dmat->GetNumRow();
-  std::size_t const pstep = (num_row + 19) / 20;
+  std::uint64_t const num_row = dmat->GetNumRow();
+  std::uint64_t const pstep = (num_row + 19) / 20;
   // Interval to display progress
-  for (std::size_t rbegin = 0; rbegin < num_row; rbegin += pstep) {
-    std::size_t const rend = std::min(rbegin + pstep, num_row);
+  for (std::uint64_t rbegin = 0; rbegin < num_row; rbegin += pstep) {
+    std::uint64_t const rend = std::min(rbegin + pstep, num_row);
     ComputeBranchLoop(
         model_preset, dmat, rbegin, rend, thread_config, &count_row_ptr[0], &counts_tloc[0]);
     if (verbose > 0) {
@@ -197,15 +197,15 @@ inline void AnnotateImpl(treelite::ModelPreset<ThresholdType, LeafOutputType> co
 
   // perform reduction on counts
   for (std::uint32_t tid = 0; tid < thread_config.nthread; ++tid) {
-    std::size_t const off = count_row_ptr[ntree] * tid;
-    for (std::size_t i = 0; i < count_row_ptr[ntree]; ++i) {
+    std::uint64_t const off = count_row_ptr[ntree] * tid;
+    for (std::uint64_t i = 0; i < count_row_ptr[ntree]; ++i) {
       new_counts[i] += counts_tloc[off + i];
     }
   }
 
   // change layout of counts
   std::vector<std::vector<std::uint64_t>>& counts = *out_counts;
-  for (std::size_t i = 0; i < ntree; ++i) {
+  for (std::uint64_t i = 0; i < ntree; ++i) {
     counts.emplace_back(
         new_counts.begin() + count_row_ptr[i], new_counts.begin() + count_row_ptr[i + 1]);
   }

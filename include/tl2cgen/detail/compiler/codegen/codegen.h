@@ -56,8 +56,9 @@ void HandleOutputNode(ast::OutputNode const* node, CodeCollection& gencode);
 void HandleTranslationUnitNode(ast::TranslationUnitNode const* node, CodeCollection& gencode);
 void HandleQuantizerNode(ast::QuantizerNode const* node, CodeCollection& gencode);
 
+std::string GetThresholdTypeStr(ast::ASTNode const* node);
 std::string GetThresholdCType(ast::ASTNode const* node);
-std::string GetThresholdCType(ast::ModelMeta const& model_meta);
+std::string GetLeafOutputTypeStr(ast::ASTNode const* node);
 std::string GetLeafOutputCType(ast::ASTNode const* node);
 std::string GetLeafOutputCType(ast::ModelMeta const& model_meta);
 

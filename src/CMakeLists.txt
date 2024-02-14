@@ -121,11 +121,10 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast/builder.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/codegen/codegen.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/codegen/format_util.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/predictor_impl.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/shared_library.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_config.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_exception.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_funcs.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/parallel_for.h)
 
-target_link_libraries(obj_tl2cgen PRIVATE ${TREELITE_LIB})
+target_link_libraries(obj_tl2cgen PRIVATE ${TREELITE_LIB} std::mdspan)

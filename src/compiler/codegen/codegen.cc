@@ -12,6 +12,7 @@
 #include <tl2cgen/detail/compiler/codegen/format_util.h>
 #include <tl2cgen/detail/filesystem.h>
 #include <tl2cgen/logging.h>
+#include <tl2cgen/predictor_types.h>
 
 #include <fstream>
 #include <string>
@@ -103,22 +104,36 @@ void WriteBuildRecipeToDisk(std::filesystem::path const& dirpath,
   ofs << "\n";  // Add newline at the end, for convention's sake
 }
 
-std::string GetThresholdCType(ast::ASTNode const* node) {
-  return GetThresholdCType(*node->meta_);
+namespace pred = tl2cgen::predictor;
+
+std::string GetThresholdTypeStr(ast::ASTNode const* node) {
+  return std::visit(
+      [](auto&& meta) {
+        using TypeMetaT = std::remove_const_t<std::remove_reference_t<decltype(meta)>>;
+        using ThresholdT = typename TypeMetaT::threshold_type;
+        return pred::DataTypeToString(pred::DataTypeFromType<ThresholdT>());
+      },
+      node->meta_->type_meta_);
 }
 
-std::string GetThresholdCType(ast::ModelMeta const& model_meta) {
+std::string GetThresholdCType(ast::ASTNode const* node) {
   return std::visit(
       [](auto&& meta) {
         using TypeMetaT = std::remove_const_t<std::remove_reference_t<decltype(meta)>>;
         using ThresholdT = typename TypeMetaT::threshold_type;
         return GetCType<ThresholdT>();
       },
-      model_meta.type_meta_);
+      node->meta_->type_meta_);
 }
 
-std::string GetLeafOutputCType(ast::ASTNode const* node) {
-  return GetLeafOutputCType(*node->meta_);
+std::string GetLeafOutputTypeStr(ast::ASTNode const* node) {
+  return std::visit(
+      [](auto&& meta) {
+        using TypeMetaT = std::remove_const_t<std::remove_reference_t<decltype(meta)>>;
+        using LeafOutputT = typename TypeMetaT::leaf_output_type;
+        return pred::DataTypeToString(pred::DataTypeFromType<LeafOutputT>());
+      },
+      node->meta_->type_meta_);
 }
 
 std::string GetLeafOutputCType(ast::ModelMeta const& model_meta) {
@@ -129,6 +144,10 @@ std::string GetLeafOutputCType(ast::ModelMeta const& model_meta) {
         return GetCType<LeafOutputT>();
       },
       model_meta.type_meta_);
+}
+
+std::string GetLeafOutputCType(ast::ASTNode const* node) {
+  return GetLeafOutputCType(*node->meta_);
 }
 
 void SourceFile::ChangeIndent(int n_tabs_delta) {
