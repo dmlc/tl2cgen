@@ -96,9 +96,9 @@ target_sources(obj_tl2cgen
     compiler/codegen/function_node.cc
     compiler/codegen/main_node.cc
     compiler/codegen/output_node.cc
+    compiler/codegen/postprocessor.cc
     compiler/codegen/quantizer_node.cc
     compiler/codegen/translation_unit_node.cc
-    compiler/templates/postprocessor.cc
     predictor/predictor.cc
     predictor/shared_library.cc
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/annotator.h
@@ -117,13 +117,10 @@ target_sources(obj_tl2cgen
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/filesystem.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/math_funcs.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/operator_comp.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/postprocessor.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast/ast.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/ast/builder.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/codegen/codegen.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/codegen/format_util.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/postprocessor.h
-    ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/compiler/templates/typeinfo.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/predictor_impl.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/predictor/shared_library.h
     ${PROJECT_SOURCE_DIR}/include/tl2cgen/detail/threading_utils/omp_config.h

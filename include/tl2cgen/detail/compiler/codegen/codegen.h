@@ -24,6 +24,7 @@ class ConditionNode;
 class OutputNode;
 class TranslationUnitNode;
 class QuantizerNode;
+class ModelMeta;
 
 }  // namespace ast
 
@@ -42,7 +43,12 @@ void HandleTranslationUnitNode(ast::TranslationUnitNode const* node, CodeCollect
 void HandleQuantizerNode(ast::QuantizerNode const* node, CodeCollection& gencode);
 
 std::string GetThresholdCType(ast::ASTNode const* node);
+std::string GetThresholdCType(ast::ModelMeta const& model_meta);
 std::string GetLeafOutputCType(ast::ASTNode const* node);
+std::string GetLeafOutputCType(ast::ModelMeta const& model_meta);
+
+std::string GetPostprocessorFunc(
+    ast::ModelMeta const& model_meta, std::string const& postprocessor);
 
 /*
  * The content of a source file is represented as a sequence of code fragments.

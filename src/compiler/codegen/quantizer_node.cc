@@ -63,11 +63,13 @@ char const* const quantize_function_template =
 
 char const* const quantize_loop_template =
     R"TL2CGENTEMPLATE(
+// Quantize data
 for (int i = 0; i < {num_feature}; ++i) {{
   if (data[i].missing != -1 && !is_categorical[i]) {{
     data[i].qvalue = quantize(data[i].fvalue, i);
   }}
 }}
+
 )TL2CGENTEMPLATE";
 
 char const* const quantize_arrays_template =

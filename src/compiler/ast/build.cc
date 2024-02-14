@@ -9,18 +9,62 @@
 #include <tl2cgen/detail/compiler/ast/builder.h>
 #include <treelite/tree.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <type_traits>
 #include <variant>
 
+namespace {
+
+std::optional<std::vector<std::int32_t>> ComputeAverageFactor(treelite::Model const& model) {
+  if (!model.average_tree_output) {
+    return std::nullopt;
+  }
+
+  auto max_num_class
+      = *std::max_element(model.num_class.Data(), model.num_class.Data() + model.num_target);
+  std::vector<std::int32_t> average_factor(model.num_target * max_num_class, 0);
+  std::size_t num_tree = model.GetNumTree();
+  for (std::size_t tree_id = 0; tree_id < num_tree; ++tree_id) {
+    if (model.target_id[tree_id] < 0 && model.class_id[tree_id] < 0) {
+      for (std::int32_t target_id = 0; target_id < model.num_target; ++target_id) {
+        for (std::int32_t class_id = 0; class_id < model.num_class[target_id]; ++class_id) {
+          average_factor[target_id * max_num_class + class_id] += 1;
+        }
+      }
+    } else if (model.target_id[tree_id] < 0) {
+      std::int32_t const class_id = model.class_id[tree_id];
+      for (std::int32_t target_id = 0; target_id < model.num_target; ++target_id) {
+        average_factor[target_id * max_num_class + class_id] += 1;
+      }
+    } else if (model.class_id[tree_id] < 0) {
+      std::int32_t const target_id = model.target_id[tree_id];
+      for (std::int32_t class_id = 0; class_id < model.num_class[target_id]; ++class_id) {
+        average_factor[target_id * max_num_class + class_id] += 1;
+      }
+    } else {
+      average_factor[model.target_id[tree_id] * max_num_class + model.class_id[tree_id]] += 1;
+    }
+  }
+
+  return average_factor;
+}
+
+}  // anonymous namespace
+
 namespace tl2cgen::compiler::detail::ast {
 
 void ASTBuilder::BuildAST(treelite::Model const& model) {
-  main_node_ = AddNode<MainNode>(nullptr, model.base_scores.AsVector());
+  main_node_ = AddNode<MainNode>(
+      nullptr, model.base_scores.AsVector(), ComputeAverageFactor(model), model.postprocessor);
   meta_.num_target_ = model.num_target;
   meta_.num_class_ = model.num_class.AsVector();
   meta_.leaf_vector_shape_ = {model.leaf_vector_shape[0], model.leaf_vector_shape[1]};
   meta_.num_feature_ = model.num_feature;
+  meta_.sigmoid_alpha_ = model.sigmoid_alpha;
+  meta_.ratio_c_ = model.ratio_c;
 
   ASTNode* func = AddNode<FunctionNode>(main_node_);
   main_node_->children_.push_back(func);

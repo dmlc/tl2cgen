@@ -30,7 +30,7 @@ void HandleOutputNode(ast::OutputNode const* node, CodeCollection& gencode) {
   // that holds the prediction for a single row.
   std::visit(
       [&](auto&& leaf_output) {
-        if (node->target_id_ == -1 && node->class_id_ == -1) {
+        if (node->target_id_ < 0 && node->class_id_ < 0) {
           // The leaf node produces output for all targets and all classes
           std::array<std::int32_t, 2> const expected_shape{num_target, max_num_class};
           TL2CGEN_CHECK(node->meta_->leaf_vector_shape_ == expected_shape);
@@ -43,7 +43,7 @@ void HandleOutputNode(ast::OutputNode const* node, CodeCollection& gencode) {
                   "leaf"_a = leaf_output[target_id * max_num_class + class_id]));
             }
           }
-        } else if (node->target_id_ == -1) {
+        } else if (node->target_id_ < 0) {
           // The leaf node produces output for all targets and a single class
           std::array<std::int32_t, 2> const expected_shape{num_target, 1};
           TL2CGEN_CHECK(node->meta_->leaf_vector_shape_ == expected_shape);
@@ -56,7 +56,7 @@ void HandleOutputNode(ast::OutputNode const* node, CodeCollection& gencode) {
                 "offset"_a = target_id * max_num_class + class_id,
                 "leaf"_a = leaf_output[target_id]));
           }
-        } else if (node->class_id_ == -1) {
+        } else if (node->class_id_ < 0) {
           // The leaf node produces output for all classes and a single target
           std::array<std::int32_t, 2> const expected_shape{1, max_num_class};
           TL2CGEN_CHECK(node->meta_->leaf_vector_shape_ == expected_shape);

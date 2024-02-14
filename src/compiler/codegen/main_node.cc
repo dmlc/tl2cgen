@@ -13,7 +13,9 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <variant>
+#include <vector>
 
 using namespace fmt::literals;
 
@@ -69,6 +71,7 @@ union Entry {{
 {extern_array_is_categorical}
 
 {dllexport}void predict(union Entry* data, int pred_margin, {threshold_type}* result);
+void postprocess({threshold_type}* result);
 )TL2CGENTEMPLATE";
 
 char const* const main_start_template =
@@ -82,12 +85,13 @@ void predict(union Entry* data, int pred_margin, {threshold_type}* result) {{
 
 void HandleMainNode(ast::MainNode const* node, CodeCollection& gencode) {
   auto threshold_ctype_str = GetThresholdCType(node);
-  std::int32_t const max_num_class
-      = *std::max_element(node->meta_->num_class_.begin(), node->meta_->num_class_.end());
+  std::int32_t const num_target = node->meta_->num_target_;
+  std::vector<std::int32_t>& num_class = node->meta_->num_class_;
+  std::int32_t const max_num_class = *std::max_element(num_class.begin(), num_class.end());
 
   gencode.SwitchToSourceFile("header.h");
   gencode.PushFragment(fmt::format(header_template, "threshold_type"_a = threshold_ctype_str,
-      "dllexport"_a = DLLEXPORT_KEYWORD, "num_target"_a = node->meta_->num_target_,
+      "dllexport"_a = DLLEXPORT_KEYWORD, "num_target"_a = num_target,
       "max_num_class"_a = max_num_class,
       "extern_array_is_categorical"_a
       = (!node->meta_->is_categorical_.empty() ? "extern const unsigned char is_categorical[];"
@@ -100,8 +104,37 @@ void HandleMainNode(ast::MainNode const* node, CodeCollection& gencode) {
   gencode.ChangeIndent(1);
   TL2CGEN_CHECK_EQ(node->children_.size(), 1);
   GenerateCodeFromAST(node->children_[0], gencode);
+
+  // Tree averaging
+  if (node->average_factor_) {
+    gencode.PushFragment("\n// Average tree outputs");
+    std::vector<std::int32_t> const& average_factor = node->average_factor_.value();
+    for (std::int32_t target_id = 0; target_id < num_target; ++target_id) {
+      for (std::int32_t class_id = 0; class_id < num_class[target_id]; ++class_id) {
+        gencode.PushFragment(fmt::format("result[{offset}] /= {average_factor};",
+            "offset"_a = target_id * max_num_class + class_id,
+            "average_factor"_a = average_factor[class_id]));
+      }
+    }
+  }
+
+  // Apply base_scores
+  gencode.PushFragment("\n// Apply base_scores");
+  for (std::int32_t target_id = 0; target_id < num_target; ++target_id) {
+    for (std::int32_t class_id = 0; class_id < num_class[target_id]; ++class_id) {
+      gencode.PushFragment(fmt::format("result[{offset}] += {base_score};",
+          "offset"_a = target_id * max_num_class + class_id,
+          "base_score"_a = ToStringHighPrecision(node->base_scores_[class_id])));
+    }
+  }
+
+  // Apply postprocessor
+  gencode.PushFragment(
+      "\n// Apply postprocessor"
+      "\nif (!pred_margin) { postprocess(result); }");
   gencode.ChangeIndent(-1);
   gencode.PushFragment("}");
+  gencode.PushFragment(GetPostprocessorFunc(*node->meta_, node->postprocessor_));
 }
 
 }  // namespace tl2cgen::compiler::detail::codegen

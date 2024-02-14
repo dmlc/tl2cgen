@@ -10,6 +10,7 @@
 #include <treelite/enum/operator.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -41,8 +42,18 @@ inline ASTNode::~ASTNode() {}
 
 class MainNode : public ASTNode {
  public:
-  explicit MainNode(std::vector<double> base_scores) : base_scores_(std::move(base_scores)) {}
+  MainNode(std::vector<double> base_scores, std::optional<std::vector<std::int32_t>> average_factor,
+      std::string postprocessor)
+      : base_scores_(std::move(base_scores)),
+        average_factor_(std::move(average_factor)),
+        postprocessor_(std::move(postprocessor)) {}
   std::vector<double> base_scores_;
+  // Each output[target_id, class_id] should be incremented by base_scores_[target_id, class_id].
+  std::optional<std::vector<std::int32_t>> average_factor_;
+  // If model.average_tree_output is True, each output[target_id, class_id] should be divided by
+  // average_factor_[target_id, class_id].
+  // If model.average_tree_output is False, set this field to std::nullopt.
+  std::string postprocessor_;  // Postprocessor to apply after computing raw predictions
   std::string GetDump() const override;
 };
 
@@ -128,6 +139,8 @@ class ModelMeta {
   std::int32_t num_feature_;  // Number of features in the training data
   std::vector<bool> is_categorical_;
   // is_categorical_[i]: is feature i categorical?
+  float sigmoid_alpha_;  // Parameter to control the "sigmoid" postprocessor
+  float ratio_c_;  // Parameter to control the "exponential_standard_ratio" postprocessor
   template <typename ThresholdType, typename LeafOutputType>
   class TypeMeta {
    public:

@@ -57,23 +57,31 @@ void GenerateCodeFromAST(ast::ASTNode const* node, CodeCollection& gencode) {
 }
 
 std::string GetThresholdCType(ast::ASTNode const* node) {
+  return GetThresholdCType(*node->meta_);
+}
+
+std::string GetThresholdCType(ast::ModelMeta const& model_meta) {
   return std::visit(
       [](auto&& meta) {
         using TypeMetaT = std::remove_const_t<std::remove_reference_t<decltype(meta)>>;
         using ThresholdT = typename TypeMetaT::threshold_type;
         return GetCType<ThresholdT>();
       },
-      node->meta_->type_meta_);
+      model_meta.type_meta_);
 }
 
 std::string GetLeafOutputCType(ast::ASTNode const* node) {
+  return GetLeafOutputCType(*node->meta_);
+}
+
+std::string GetLeafOutputCType(ast::ModelMeta const& model_meta) {
   return std::visit(
       [](auto&& meta) {
         using TypeMetaT = std::remove_const_t<std::remove_reference_t<decltype(meta)>>;
         using LeafOutputT = typename TypeMetaT::leaf_output_type;
         return GetCType<LeafOutputT>();
       },
-      node->meta_->type_meta_);
+      model_meta.type_meta_);
 }
 
 void SourceFile::ChangeIndent(int n_tabs_delta) {
