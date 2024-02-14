@@ -15,6 +15,7 @@ using namespace fmt::literals;
 namespace tl2cgen::compiler::detail::codegen {
 
 void HandleFunctionNode(ast::FunctionNode const* node, CodeCollection& gencode) {
+  gencode.PushFragment("unsigned int tmp;");
   for (ast::ASTNode* child : node->children_) {
     GenerateCodeFromAST(child, gencode);
   }

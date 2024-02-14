@@ -23,6 +23,17 @@ namespace {
 namespace ast = tl2cgen::compiler::detail::ast;
 namespace codegen = tl2cgen::compiler::detail::codegen;
 
+std::string GetFabsCFunc(std::string const& threshold_type) {
+  if (threshold_type == "float") {
+    return "fabsf";
+  } else if (threshold_type == "double") {
+    return "fabs";
+  } else {
+    TL2CGEN_LOG(FATAL) << "Unrecognized type: " << threshold_type;
+    return "";
+  }
+}
+
 inline std::string ExtractNumericalCondition(ast::NumericalConditionNode const* node) {
   std::string const threshold_type = codegen::GetThresholdCType(node);
   std::string result;
@@ -73,6 +84,9 @@ inline std::vector<std::uint64_t> GetCategoricalBitmap(
 }
 
 inline std::string ExtractCategoricalCondition(ast::CategoricalConditionNode const* node) {
+  std::string const threshold_ctype_str = codegen::GetThresholdCType(node);
+  std::string const fabs = GetFabsCFunc(threshold_ctype_str);
+
   std::string result;
   std::vector<std::uint64_t> bitmap = GetCategoricalBitmap(node->category_list_);
   TL2CGEN_CHECK_GE(bitmap.size(), 1);
@@ -99,8 +113,9 @@ inline std::string ExtractCategoricalCondition(ast::CategoricalConditionNode con
 
     oss << fmt::format(
         "((data[{split_index}].fvalue >= 0) && "
-        "(fabsf(data[{split_index}].fvalue) <= (float)(1U << FLT_MANT_DIG)) && (",
-        "split_index"_a = node->split_index_);
+        "({fabs}(data[{split_index}].fvalue) <= ({threshold_ctype})(1U << FLT_MANT_DIG)) && (",
+        "split_index"_a = node->split_index_, "threshold_ctype"_a = threshold_ctype_str,
+        "fabs"_a = fabs);
     oss << "(tmp >= 0 && tmp < 64 && (( (uint64_t)" << bitmap[0] << "U >> tmp) & 1) )";
     for (std::size_t i = 1; i < bitmap.size(); ++i) {
       oss << " || (tmp >= " << (i * 64) << " && tmp < " << ((i + 1) * 64) << " && (( (uint64_t)"

@@ -13,7 +13,7 @@ DPATH = CURRENT_DIR.parent / "example_data"
 
 Dataset = collections.namedtuple(
     "Dataset",
-    "model format dtrain dtest libname expected_prob expected_margin is_multiclass dtype",
+    "model format dtrain dtest libname dtype",
 )
 
 _dataset_db = {
@@ -23,9 +23,6 @@ _dataset_db = {
         dtrain="agaricus.train",
         dtest="agaricus.test",
         libname="agaricus",
-        expected_prob="agaricus.test.prob",
-        expected_margin="agaricus.test.margin",
-        is_multiclass=False,
         dtype="float32",
     ),
     "dermatology": Dataset(
@@ -34,9 +31,6 @@ _dataset_db = {
         dtrain="dermatology.train",
         dtest="dermatology.test",
         libname="dermatology",
-        expected_prob="dermatology.test.prob",
-        expected_margin="dermatology.test.margin",
-        is_multiclass=True,
         dtype="float32",
     ),
     "toy_categorical": Dataset(
@@ -45,9 +39,6 @@ _dataset_db = {
         dtrain=None,
         dtest="toy_categorical.test",
         libname="toycat",
-        expected_prob=None,
-        expected_margin="toy_categorical.test.pred",
-        is_multiclass=False,
         dtype="float64",
     ),
     "sparse_categorical": Dataset(
@@ -56,9 +47,6 @@ _dataset_db = {
         dtrain=None,
         dtest="sparse_categorical.test",
         libname="sparsecat",
-        expected_prob=None,
-        expected_margin="sparse_categorical.test.margin",
-        is_multiclass=False,
         dtype="float64",
     ),
     "xgb_toy_categorical": Dataset(
@@ -67,9 +55,6 @@ _dataset_db = {
         dtrain=None,
         dtest="xgb_toy_categorical.test",
         libname="xgbtoycat",
-        expected_prob=None,
-        expected_margin="xgb_toy_categorical.test.pred",
-        is_multiclass=False,
         dtype="float32",
     ),
 }
@@ -110,8 +95,6 @@ example_model_db = {
         model=_qualify_path(k, v.model),
         dtrain=_qualify_path(k, v.dtrain),
         dtest=_qualify_path(k, v.dtest),
-        expected_prob=_qualify_path(k, v.expected_prob),
-        expected_margin=_qualify_path(k, v.expected_margin),
     )
     for k, v in _dataset_db.items()
 }
