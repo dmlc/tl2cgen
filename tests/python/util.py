@@ -76,10 +76,14 @@ def check_predictor_output(
     tl_model = load_example_model(dataset)
 
     # GTIL doesn't yet support sparse matrix; so use NaN to represent missing values
-    X_test = load_svmlight_file(example_model_db[dataset].dtest, zero_based=True)[
-        0
-    ].toarray()
+    # Make sure to distinguish between true 0 and missing values
+    X_test_ = load_svmlight_file(example_model_db[dataset].dtest, zero_based=True)[0]
+    zeros = (X_test_ == 0).toarray()
+    X_test = X_test_.toarray()
     X_test[X_test == 0] = "nan"
+    if dataset != "mushroom":
+        # TODO(hcho3): Re-train mushroom to handle NAs differently than zeros
+        X_test[zeros] = 0
 
     expected_margin = treelite.gtil.predict(tl_model, X_test, pred_margin=True)
     if len(expected_margin.shape) == 3:
