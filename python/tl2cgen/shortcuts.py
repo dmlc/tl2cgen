@@ -1,4 +1,5 @@
 """Convenience functions"""
+
 import pathlib
 import shutil
 from tempfile import TemporaryDirectory
@@ -17,12 +18,11 @@ def export_lib(
     toolchain: str,
     libpath: Union[str, pathlib.Path],
     params: Optional[Dict[str, Any]] = None,
-    compiler: str = "ast_native",
     *,
     nthread: Optional[int] = None,
     verbose: bool = False,
     options: Optional[List[str]] = None,
-):
+):  # pylint: disable=too-many-arguments
     """
     Convenience function: Generate prediction code and immediately turn it
     into a dynamic shared library. A temporary directory will be created to
@@ -41,9 +41,6 @@ def export_lib(
         Parameters to be passed to the compiler. See
         :py:doc:`this page </compiler_param>` for the list of compiler
         parameters.
-    compiler :
-        Kind of C code generator to use. Currently, there are two possible values:
-        {"ast_native", "failsafe"}
     nthread :
         Number of threads to use in creating the shared library.
         Defaults to the number of cores in the system.
@@ -78,7 +75,7 @@ def export_lib(
     long_build_time_warning = not (params and "parallel_comp" in params)
 
     with TemporaryDirectory() as tempdir:
-        generate_c_code(model, tempdir, params, compiler, verbose=verbose)
+        generate_c_code(model, tempdir, params, verbose=verbose)
         temp_libpath = create_shared(
             toolchain,
             tempdir,
@@ -98,7 +95,6 @@ def export_srcpkg(
     pkgpath: Union[str, pathlib.Path],
     libname: str,
     params: Optional[Dict[str, Any]] = None,
-    compiler: str = "ast_native",
     *,
     verbose: bool = False,
     options: Optional[List[str]] = None,
@@ -123,8 +119,6 @@ def export_srcpkg(
         Parameters to be passed to the compiler. See
         :py:doc:`this page </compiler_param>` for the list of compiler
         parameters.
-    compiler :
-        Name of compiler to use in C code generation
     verbose :
         Whether to produce extra messages
     options :
@@ -168,7 +162,7 @@ def export_srcpkg(
         if params is None:
             params = {}
         params["native_lib_name"] = target
-        generate_c_code(model, dirpath, params, compiler, verbose=verbose)
+        generate_c_code(model, dirpath, params, verbose=verbose)
         if toolchain == "cmake":
             generate_cmakelists(dirpath, options)
         else:

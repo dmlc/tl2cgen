@@ -87,7 +87,6 @@ int TL2cgenGenerateCode(
 
   std::filesystem::path dirpath_
       = std::filesystem::weakly_canonical(std::filesystem::u8path(std::string(dirpath)));
-  detail::filesystem::CreateDirectoryIfNotExist(dirpath_);
 
   /* Compile model */
   auto param = compiler::CompilerParam::ParseFromJSON(compiler_params_json_str);

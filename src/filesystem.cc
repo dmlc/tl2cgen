@@ -24,14 +24,4 @@ void CreateDirectoryIfNotExist(std::filesystem::path const& dirpath) {
   }
 }
 
-void WriteToFile(std::filesystem::path const& path, std::string const& content) {
-  std::ofstream of(path);
-  of << content;
-}
-
-void WriteToFile(std::filesystem::path const& path, std::vector<char> const& content) {
-  std::ofstream of(path, std::ios::out | std::ios::binary);
-  of.write(content.data(), content.size());
-}
-
 }  // namespace tl2cgen::detail::filesystem

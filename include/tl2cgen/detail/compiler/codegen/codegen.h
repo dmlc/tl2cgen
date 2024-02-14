@@ -7,16 +7,27 @@
 #ifndef TL2CGEN_DETAIL_COMPILER_CODEGEN_CODEGEN_H_
 #define TL2CGEN_DETAIL_COMPILER_CODEGEN_CODEGEN_H_
 
+#include <filesystem>
 #include <map>
 #include <ostream>
 #include <string>
 #include <vector>
 
-namespace tl2cgen::compiler::detail {
+/* Forward declarations */
+namespace treelite {
 
-namespace ast {
+class Model;
 
-// Forward declarations
+}  // namespace treelite
+
+namespace tl2cgen::compiler {
+
+struct CompilerParam;
+
+}  // namespace tl2cgen::compiler
+
+namespace tl2cgen::compiler::detail::ast {
+
 class ASTNode;
 class MainNode;
 class FunctionNode;
@@ -26,13 +37,16 @@ class TranslationUnitNode;
 class QuantizerNode;
 class ModelMeta;
 
-}  // namespace ast
+}  // namespace tl2cgen::compiler::detail::ast
 
-namespace codegen {
+namespace tl2cgen::compiler::detail::codegen {
 
 class CodeCollection;  // forward declaration
 
 void GenerateCodeFromAST(ast::ASTNode const* node, CodeCollection& gencode);
+void WriteCodeToDisk(std::filesystem::path const& dirpath, CodeCollection const& collection);
+void WriteBuildRecipeToDisk(std::filesystem::path const& dirpath,
+    std::string const& native_lib_name, CodeCollection const& collection);
 
 // Codegen implementation for each AST node type
 void HandleMainNode(ast::MainNode const* node, CodeCollection& gencode);
@@ -70,6 +84,9 @@ class SourceFile {
   void ChangeIndent(int n_tabs_delta);  // Add or remove indent
   void PushFragment(std::string content);
   friend std::ostream& operator<<(std::ostream&, CodeCollection const&);
+  friend void WriteCodeToDisk(std::filesystem::path const& dirpath, CodeCollection const&);
+  friend void WriteBuildRecipeToDisk(
+      std::filesystem::path const&, std::string const&, CodeCollection const&);
   friend class CodeCollection;
 };
 
@@ -88,11 +105,12 @@ class CodeCollection {
   void PushFragment(std::string content);
 
   friend std::ostream& operator<<(std::ostream&, CodeCollection const&);
+  friend void WriteCodeToDisk(std::filesystem::path const&, CodeCollection const&);
+  friend void WriteBuildRecipeToDisk(
+      std::filesystem::path const&, std::string const&, CodeCollection const&);
 };
 std::ostream& operator<<(std::ostream& os, CodeCollection const& collection);
 
-}  // namespace codegen
-
-}  // namespace tl2cgen::compiler::detail
+}  // namespace tl2cgen::compiler::detail::codegen
 
 #endif  // TL2CGEN_DETAIL_COMPILER_CODEGEN_CODEGEN_H_

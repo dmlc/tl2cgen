@@ -16,7 +16,7 @@ namespace {
 
 char const* const unit_function_name_template = "predict_unit{unit_id}";
 char const* const unit_function_signature_template
-    = "void {unit_function_name}(union Entry* data, {threshold_type}* result)";
+    = "void {unit_function_name}(union Entry* data, {leaf_output_type}* result)";
 char const* const unit_source_start_template =
     R"TL2CGENTEMPLATE(
 #include "header.h"
@@ -30,11 +30,11 @@ namespace tl2cgen::compiler::detail::codegen {
 
 void HandleTranslationUnitNode(ast::TranslationUnitNode const* node, CodeCollection& gencode) {
   TL2CGEN_CHECK_EQ(node->children_.size(), 1);
-  auto threshold_ctype_str = GetThresholdCType(node);
+  auto leaf_output_ctype_str = GetLeafOutputCType(node);
   std::string const unit_function_name
       = fmt::format(unit_function_name_template, "unit_id"_a = node->unit_id_);
   std::string const unit_function_signature = fmt::format(unit_function_signature_template,
-      "unit_function_name"_a = unit_function_name, "threshold_type"_a = threshold_ctype_str);
+      "unit_function_name"_a = unit_function_name, "leaf_output_type"_a = leaf_output_ctype_str);
 
   auto current_file = gencode.GetCurrentSourceFile();
   gencode.PushFragment(fmt::format(

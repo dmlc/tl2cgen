@@ -10,6 +10,7 @@
 #include <tl2cgen/detail/compiler/ast/builder.h>
 #include <tl2cgen/detail/compiler/codegen/codegen.h>
 #include <tl2cgen/detail/compiler/codegen/format_util.h>
+#include <tl2cgen/detail/filesystem.h>
 #include <treelite/tree.h>
 
 #include <filesystem>
@@ -51,11 +52,15 @@ namespace tl2cgen::compiler {
 
 void CompileModel(treelite::Model const& model, CompilerParam const& param,
     std::filesystem::path const& dirpath) {
+  tl2cgen::detail::filesystem::CreateDirectoryIfNotExist(dirpath);
   auto builder = LowerToAST(model, param);
   /* Generate C code */
   detail::codegen::CodeCollection gencode;
   detail::codegen::GenerateCodeFromAST(builder.GetRootNode(), gencode);
-  TL2CGEN_LOG(INFO) << "\n" << gencode;
+  // Write C code to disk
+  detail::codegen::WriteCodeToDisk(dirpath, gencode);
+  // Write recipe.json
+  detail::codegen::WriteBuildRecipeToDisk(dirpath, param.native_lib_name, gencode);
 }
 
 std::string DumpAST(treelite::Model const& model, CompilerParam const& param) {

@@ -70,8 +70,8 @@ union Entry {{
 
 {extern_array_is_categorical}
 
-{dllexport}void predict(union Entry* data, int pred_margin, {threshold_type}* result);
-void postprocess({threshold_type}* result);
+{dllexport}void predict(union Entry* data, int pred_margin, {leaf_output_type}* result);
+void postprocess({leaf_output_type}* result);
 )TL2CGENTEMPLATE";
 
 char const* const main_start_template =
@@ -80,17 +80,17 @@ char const* const main_start_template =
 
 {array_is_categorical}
 
-void predict(union Entry* data, int pred_margin, {threshold_type}* result) {{
+void predict(union Entry* data, int pred_margin, {leaf_output_type}* result) {{
 )TL2CGENTEMPLATE";
 
 void HandleMainNode(ast::MainNode const* node, CodeCollection& gencode) {
-  auto threshold_ctype_str = GetThresholdCType(node);
+  auto leaf_output_ctype_str = GetLeafOutputCType(node);
   std::int32_t const num_target = node->meta_->num_target_;
   std::vector<std::int32_t>& num_class = node->meta_->num_class_;
   std::int32_t const max_num_class = *std::max_element(num_class.begin(), num_class.end());
 
   gencode.SwitchToSourceFile("header.h");
-  gencode.PushFragment(fmt::format(header_template, "threshold_type"_a = threshold_ctype_str,
+  gencode.PushFragment(fmt::format(header_template, "leaf_output_type"_a = leaf_output_ctype_str,
       "dllexport"_a = DLLEXPORT_KEYWORD, "num_target"_a = num_target,
       "max_num_class"_a = max_num_class,
       "extern_array_is_categorical"_a
@@ -100,7 +100,7 @@ void HandleMainNode(ast::MainNode const* node, CodeCollection& gencode) {
   gencode.SwitchToSourceFile("main.c");
   gencode.PushFragment(fmt::format(main_start_template,
       "array_is_categorical"_a = RenderIsCategoricalArray(node->meta_->is_categorical_),
-      "threshold_type"_a = threshold_ctype_str));
+      "leaf_output_type"_a = leaf_output_ctype_str));
   gencode.ChangeIndent(1);
   TL2CGEN_CHECK_EQ(node->children_.size(), 1);
   GenerateCodeFromAST(node->children_[0], gencode);
