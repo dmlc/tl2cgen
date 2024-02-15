@@ -156,7 +156,8 @@ void postprocess({leaf_output_type}* result) {{
   }}
 }}
 )TL2CGENTEMPLATE",
-      "leaf_output_type"_a = leaf_output_type, "exp2"_a = GetExp2CFunc(leaf_output_type));
+      "leaf_output_type"_a = leaf_output_type, "exp2"_a = GetExp2CFunc(leaf_output_type),
+      "ratio_c"_a = ratio_c);
 }
 
 std::string LogarithmOnePlusExp(ast::ModelMeta const& model_meta) {
