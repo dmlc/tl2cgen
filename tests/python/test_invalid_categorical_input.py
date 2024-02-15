@@ -51,7 +51,7 @@ def ref_pred_fixture():
     # inf, 1e10, and -1e10 don't match any element of left_categories, so they get mapped to the
     # right child.
     return np.array([1, 1, 1, -1, -1, -1, 1, -1, 1, 1, 1], dtype=np.float32).reshape(
-        (-1, 1)
+        (-1, 1, 1)
     )
 
 

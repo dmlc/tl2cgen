@@ -37,7 +37,7 @@ except ImportError:
     pytest.skip("LightGBM not installed; skipping", allow_module_level=True)
 
 
-def _compile_lightgbm_model(
+def _compile_lightgbm_model(  # pylint: disable=too-many-arguments
     *,
     model_path: Optional[pathlib.Path] = None,
     model_obj: Optional[lightgbm.Booster] = None,
@@ -104,7 +104,7 @@ def test_lightgbm_regression(toolchain, objective, reg_sqrt, dataset):
         )
         dmat = tl2cgen.DMatrix(X_test, dtype="float64")
         out_pred = predictor.predict(dmat)
-        expected_pred = bst.predict(X_test).reshape((X_test.shape[0], -1))
+        expected_pred = bst.predict(X_test).reshape((X_test.shape[0], 1, -1))
         np.testing.assert_almost_equal(out_pred, expected_pred, decimal=4)
 
 
@@ -155,7 +155,7 @@ def test_lightgbm_multiclass_classification(
 
     dmat = tl2cgen.DMatrix(X_test, dtype="float64")
     out_pred = predictor.predict(dmat)
-    expected_pred = bst.predict(X_test)
+    expected_pred = bst.predict(X_test).reshape((X_test.shape[0], 1, -1))
     np.testing.assert_almost_equal(out_pred, expected_pred, decimal=5)
 
 
@@ -187,7 +187,7 @@ def test_lightgbm_binary_classification(tmpdir, objective, toolchain):
     )
     bst.save_model(model_path)
 
-    shape = (dtest.num_data(), -1)
+    shape = (dtest.num_data(), 1, -1)
     expected_prob = bst.predict(dtest_path).reshape(shape)
     expected_margin = bst.predict(dtest_path, raw_score=True).reshape(shape)
 
@@ -307,7 +307,7 @@ def test_categorical_data_pandas_df_with_dummies(tmpdir, toolchain):
     bst = lightgbm.train(
         param, dtrain, num_boost_round=15, valid_sets=[dtrain], valid_names=["train"]
     )
-    lgb_out = bst.predict(df_dummies).reshape((df_dummies.shape[0], -1))
+    lgb_out = bst.predict(df_dummies).reshape((df_dummies.shape[0], 1, -1))
     bst.save_model(model_path)
 
     predictor = _compile_lightgbm_model(
@@ -363,7 +363,7 @@ def test_sparse_ranking_model(tmpdir, quantize, toolchain):
     dtrain = lightgbm.Dataset(X, label=y, group=[X.shape[0]])
 
     bst = lightgbm.train(params, dtrain, num_boost_round=1)
-    lgb_out = bst.predict(X).reshape((X.shape[0], -1))
+    lgb_out = bst.predict(X).reshape((X.shape[0], 1, -1))
     bst.save_model(model_path)
 
     predictor = _compile_lightgbm_model(
@@ -426,7 +426,7 @@ def test_nan_handling_with_categorical_splits(tmpdir, toolchain):
     model_path = pathlib.Path(tmpdir) / "dummy_categorical.txt"
 
     input_with_nan = np.array([[np.NaN], [0.0]])
-    lgb_pred = bst.predict(input_with_nan).reshape((input_with_nan.shape[0], -1))
+    lgb_pred = bst.predict(input_with_nan).reshape((input_with_nan.shape[0], 1, -1))
     bst.save_model(model_path)
 
     predictor = _compile_lightgbm_model(
