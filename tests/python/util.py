@@ -86,13 +86,9 @@ def check_predictor_output(
         X_test[zeros] = 0
 
     expected_margin = treelite.gtil.predict(tl_model, X_test, pred_margin=True)
-    if len(expected_margin.shape) == 3:
-        expected_margin = np.transpose(expected_margin, axes=(1, 0, 2))
     np.testing.assert_almost_equal(out_margin, expected_margin, decimal=5)
 
     expected_prob = treelite.gtil.predict(tl_model, X_test)
-    if len(expected_prob.shape) == 3:
-        expected_prob = np.transpose(expected_prob, axes=(1, 0, 2))
     np.testing.assert_almost_equal(out_prob, expected_prob, decimal=5)
 
 

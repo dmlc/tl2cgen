@@ -58,18 +58,14 @@ def test_node_insert_delete(tmpdir, toolchain, test_round_trip):
         model.serialize(checkpoint_path)
         model = treelite.Model.deserialize(checkpoint_path)
     assert model.num_feature == num_feature
-    assert model.num_class == 1
     assert model.num_tree == 1
 
     libpath = pathlib.Path(tmpdir) / ("libtest" + _libext())
     tl2cgen.export_lib(model, toolchain=toolchain, libpath=libpath, verbose=True)
     predictor = tl2cgen.Predictor(libpath=libpath)
     assert predictor.num_feature == num_feature
-    assert predictor.num_class == 1
-    assert predictor.pred_transform == "identity"
-    assert predictor.global_bias == 0.0
-    assert predictor.sigmoid_alpha == 1.0
-    assert predictor.ratio_c == 1.0
+    assert predictor.num_target == 1
+    np.testing.assert_array_equal(predictor.num_class, np.array([1], dtype=np.int32))
     for f0 in [-0.5, 0.5, 1.5, np.nan]:
         for f1 in [0, 1, 2, 3, 4, np.nan]:
             for f2 in [-1.0, -0.5, 1.0, np.nan]:
