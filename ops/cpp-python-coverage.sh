@@ -8,7 +8,7 @@ sudo apt-get install lcov ninja-build
 echo "##[section]Building TL2cgen..."
 mkdir build/
 cd build/
-cmake .. -DTEST_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DBUILD_CPP_TESTS=ON -GNinja
+cmake .. -DTEST_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -DBUILD_CPP_TEST=ON -GNinja
 ninja
 cd ..
 

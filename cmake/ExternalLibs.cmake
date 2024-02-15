@@ -81,9 +81,9 @@ if(MSVC)  # workaround for MSVC 19.x: https://github.com/kokkos/mdspan/issues/27
 endif()
 
 # Google C++ tests
-if (BUILD_CPP_TESTS)
-  find_package(GTest 1.11.0 CONFIG)
-  if (NOT GTEST_FOUND)
+if (BUILD_CPP_TEST)
+  find_package(GTest 1.11.0)
+  if (NOT GTest_FOUND)
     message(STATUS "Did not find Google Test in the system root. Fetching Google Test now...")
     set(gtest_force_shared_crt OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(
@@ -92,7 +92,11 @@ if (BUILD_CPP_TESTS)
         GIT_TAG release-1.11.0
     )
     FetchContent_MakeAvailable(googletest)
-    add_library(GTest::GTest ALIAS gtest)
+    add_library(GTest::gtest ALIAS gtest)
     add_library(GTest::gmock ALIAS gmock)
+    if(IS_DIRECTORY "${googletest_SOURCE_DIR}")
+      # Do not install gtest
+      set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
+    endif()
   endif ()
 endif ()

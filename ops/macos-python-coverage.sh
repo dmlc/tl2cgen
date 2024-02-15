@@ -11,7 +11,7 @@ set -x
 rm -rf build/
 mkdir build
 cd build
-cmake .. -DTEST_COVERAGE=ON -DBUILD_CPP_TESTS=ON -GNinja
+cmake .. -DTEST_COVERAGE=ON -DBUILD_CPP_TEST=ON -GNinja
 ninja
 cd ..
 
