@@ -1,4 +1,5 @@
 """Core module of TL2cgen"""
+
 import ctypes
 import json
 import pathlib
@@ -112,7 +113,7 @@ def _dump_compiler_ast(
         )
     )
     assert out_str.value is not None
-    return out_str.value.decode("utf-8")
+    return out_str.value.decode("utf-8")  # pylint: disable=E1101
 
 
 def annotate_branch(

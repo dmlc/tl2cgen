@@ -1,4 +1,5 @@
 """Test whether TL2cgen handles invalid category values correctly"""
+
 import pathlib
 
 import numpy as np

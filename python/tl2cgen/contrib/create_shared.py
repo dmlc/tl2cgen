@@ -1,4 +1,5 @@
 """Logic for launching C compiler to build shared libs"""
+
 import pathlib
 import subprocess
 from typing import Any, Dict

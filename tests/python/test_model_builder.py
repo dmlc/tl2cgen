@@ -1,4 +1,5 @@
 """Tests for model builder interface"""
+
 import os
 import pathlib
 

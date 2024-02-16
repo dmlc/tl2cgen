@@ -35,6 +35,7 @@ def update_pypkg(
     is_dev: bool,
     rc_ver: Optional[int] = None,
 ) -> None:
+    # pylint: disable=too-many-arguments
     """Change version in the Python package"""
     version = f"{major}.{minor}.{patch}"
     if is_rc:
@@ -66,6 +67,7 @@ def update_java_pkg(
     is_dev: bool,
     rc_ver: Optional[int] = None,
 ) -> None:
+    # pylint: disable=too-many-arguments
     """Change version in the Java package"""
     version = f"{major}.{minor}.{patch}"
     if is_rc:

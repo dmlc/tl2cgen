@@ -1,4 +1,5 @@
 """Data matrix"""
+
 import ctypes
 from typing import Optional, Tuple, Union
 

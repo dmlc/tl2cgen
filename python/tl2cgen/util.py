@@ -1,4 +1,5 @@
 """Utility functions"""
+
 import ctypes
 import json
 import pathlib

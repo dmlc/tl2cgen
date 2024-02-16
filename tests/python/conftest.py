@@ -1,4 +1,5 @@
 """Pytest fixtures to initialize tests"""
+
 import pathlib
 import tempfile
 

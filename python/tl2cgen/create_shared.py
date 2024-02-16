@@ -1,4 +1,5 @@
 """Launcher for C compiler to build shared libs"""
+
 import pathlib
 import time
 import warnings
@@ -20,7 +21,7 @@ def create_shared(
     verbose: bool = False,
     options: Optional[List[str]] = None,
     long_build_time_warning: bool = True,
-):  # pylint: disable=R0914
+):  # pylint: disable=R0914,too-many-arguments
     """Create shared library.
 
     Parameters

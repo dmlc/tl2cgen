@@ -1,4 +1,5 @@
 """Suite of basic tests"""
+
 import itertools
 import os
 import pathlib
