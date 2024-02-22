@@ -29,7 +29,7 @@ dependencies = [
     "numpy",
     "scipy",
     "packaging",
-    "treelite>=4.1"
+    "treelite>=4.1.1"
 ]
 
 [project.urls]
