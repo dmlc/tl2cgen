@@ -2,21 +2,31 @@
 
 # pylint: disable=R0201, R0915
 import os
+import pathlib
 
 import numpy as np
 import pytest
 import treelite
 from hypothesis import assume, given, settings
-from hypothesis.strategies import integers, sampled_from
-from sklearn.datasets import load_iris
+from hypothesis.strategies import data as hypothesis_callback
+from hypothesis.strategies import integers, just, sampled_from
 from sklearn.model_selection import train_test_split
 
 import tl2cgen
 from tl2cgen.contrib.util import _libext
 
-from .hypothesis_util import standard_regression_datasets, standard_settings
+from .hypothesis_util import (
+    standard_classification_datasets,
+    standard_regression_datasets,
+    standard_settings,
+)
 from .metadata import format_libpath_for_example_model, load_example_model
-from .util import TemporaryDirectory, check_predictor, os_compatible_toolchains
+from .util import (
+    TemporaryDirectory,
+    check_predictor,
+    os_compatible_toolchains,
+    to_categorical,
+)
 
 try:
     import xgboost as xgb
@@ -25,63 +35,92 @@ except ImportError:
     pytest.skip("XGBoost not installed; skipping", allow_module_level=True)
 
 
+def generate_data_for_squared_log_error(n_targets: int = 1):
+    """Generate data containing outliers."""
+    n_rows = 4096
+    n_cols = 16
+
+    outlier_mean = 10000  # mean of generated outliers
+    n_outliers = 64
+
+    X = np.random.randn(n_rows, n_cols)
+    y = np.random.randn(n_rows, n_targets)
+    y += np.abs(np.min(y, axis=0))
+
+    # Create outliers
+    for _ in range(0, n_outliers):
+        ind = np.random.randint(0, len(y) - 1)
+        y[ind, :] += np.random.randint(0, outlier_mean)
+
+    # rmsle requires all label be greater than -1.
+    assert np.all(y > -1.0)
+
+    return X, y
+
+
 @given(
     toolchain=sampled_from(os_compatible_toolchains()),
     objective=sampled_from(
         [
-            "reg:linear",
             "reg:squarederror",
             "reg:squaredlogerror",
             "reg:pseudohubererror",
         ]
     ),
-    model_format=sampled_from(["binary", "json"]),
-    num_parallel_tree=integers(min_value=1, max_value=10),
-    dataset=standard_regression_datasets(),
+    num_boost_round=integers(min_value=3, max_value=10),
+    num_parallel_tree=integers(min_value=1, max_value=3),
+    callback=hypothesis_callback(),
 )
 @settings(**standard_settings())
-def test_xgb_regression(toolchain, objective, model_format, num_parallel_tree, dataset):
+def test_xgb_regression(
+    toolchain, objective, num_boost_round, num_parallel_tree, callback
+):
     # pylint: disable=too-many-locals
     """Test a random regression dataset"""
-    X, y = dataset
     if objective == "reg:squaredlogerror":
-        assume(np.all(y > -1))
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, shuffle=False
-    )
-    dtrain = xgb.DMatrix(X_train, label=y_train)
-    dtest = xgb.DMatrix(X_test, label=y_test)
+        X, y = generate_data_for_squared_log_error()
+        use_categorical = False
+    else:
+        X, y = callback.draw(standard_regression_datasets())
+        use_categorical = callback.draw(sampled_from([True, False]))
+    if use_categorical:
+        n_categorical = callback.draw(sampled_from([3, 5, X.shape[1]]))
+        assume(n_categorical <= X.shape[1])
+        df, X_pred = to_categorical(X, n_categorical=n_categorical, invalid_frac=0.1)
+        dtrain = xgb.DMatrix(df, label=y, enable_categorical=True)
+        model_format = "json"
+    else:
+        dtrain = xgb.DMatrix(X, label=y)
+        X_pred = X.copy()
+        model_format = callback.draw(sampled_from(["json", "legacy_binary"]))
     param = {
         "max_depth": 8,
-        "eta": 1,
+        "eta": 0.1,
         "verbosity": 0,
         "objective": objective,
         "num_parallel_tree": num_parallel_tree,
     }
-    num_round = 10
     bst = xgb.train(
         param,
         dtrain,
-        num_boost_round=num_round,
-        evals=[(dtrain, "train"), (dtest, "test")],
+        num_boost_round=num_boost_round,
+        evals=[(dtrain, "train")],
     )
     with TemporaryDirectory() as tmpdir:
         if model_format == "json":
-            model_name = "regression.json"
-            model_path = os.path.join(tmpdir, model_name)
+            model_path = pathlib.Path(tmpdir) / "regression.json"
             bst.save_model(model_path)
             model = treelite.frontend.load_xgboost_model(filename=model_path)
         else:
-            model_name = "regression.model"
-            model_path = os.path.join(tmpdir, model_name)
+            model_path = pathlib.Path(tmpdir) / "regression.model"
             bst.save_model(model_path)
             model = treelite.frontend.load_xgboost_model_legacy_binary(
                 filename=model_path
             )
 
         assert model.num_feature == dtrain.num_col()
-        assert model.num_tree == num_round * num_parallel_tree
-        libpath = os.path.join(tmpdir, "regression" + _libext())
+        assert model.num_tree == num_boost_round * num_parallel_tree
+        libpath = pathlib.Path(tmpdir) / ("regression" + _libext())
         tl2cgen.export_lib(
             model,
             toolchain=toolchain,
@@ -94,39 +133,51 @@ def test_xgb_regression(toolchain, objective, model_format, num_parallel_tree, d
         assert predictor.num_feature == dtrain.num_col()
         assert predictor.num_target == 1
         np.testing.assert_array_equal(predictor.num_class, [1])
-        dmat = tl2cgen.DMatrix(X_test, dtype="float32")
+        dmat = tl2cgen.DMatrix(X_pred, dtype="float32")
         out_pred = predictor.predict(dmat)
-        expected_pred = bst.predict(dtest, strict_shape=True)[:, :, np.newaxis]
+        expected_pred = bst.predict(
+            xgb.DMatrix(X_pred), strict_shape=True, validate_features=False
+        )[:, :, np.newaxis]
         np.testing.assert_almost_equal(out_pred, expected_pred, decimal=3)
 
 
-@pytest.mark.parametrize("num_parallel_tree", [1, 3, 5])
-@pytest.mark.parametrize("model_format", ["binary", "json"])
-@pytest.mark.parametrize(
-    "objective",
-    ["multi:softmax", "multi:softprob"],
+@given(
+    dataset=standard_classification_datasets(
+        n_classes=integers(min_value=3, max_value=5), n_informative=just(5)
+    ),
+    toolchain=sampled_from(os_compatible_toolchains()),
+    objective=sampled_from(["multi:softmax", "multi:softprob"]),
+    pred_margin=sampled_from([True, False]),
+    num_boost_round=integers(min_value=3, max_value=5),
+    num_parallel_tree=integers(min_value=1, max_value=2),
+    use_categorical=sampled_from([True, False]),
+    callback=hypothesis_callback(),
 )
-@pytest.mark.parametrize("toolchain", os_compatible_toolchains())
-def test_xgb_iris(
-    tmpdir,
+@settings(**standard_settings())
+def test_xgb_multiclass_classifier(
+    dataset,
     toolchain,
     objective,
-    model_format,
+    pred_margin,
+    num_boost_round,
     num_parallel_tree,
+    use_categorical,
+    callback,
 ):
     # pylint: disable=too-many-locals, too-many-arguments
-    """Test Iris data (multi-class classification)"""
-    X, y = load_iris(return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, shuffle=False
-    )
-    dtrain = xgb.DMatrix(X_train, label=y_train)
-    dtest = xgb.DMatrix(X_test, label=y_test)
-    num_class = 3
-    num_round = 10
+    """Test XGBoost with multi-class classification problem"""
+    X, y = dataset
+    if use_categorical:
+        n_categorical = callback.draw(integers(min_value=1, max_value=X.shape[1]))
+        df, X_pred = to_categorical(X, n_categorical=n_categorical, invalid_frac=0.1)
+        dtrain = xgb.DMatrix(df, label=y, enable_categorical=True)
+    else:
+        dtrain = xgb.DMatrix(X, label=y)
+        X_pred = X.copy()
+    num_class = np.max(y) + 1
     param = {
         "max_depth": 6,
-        "eta": 0.05,
+        "eta": 0.1,
         "num_class": num_class,
         "verbosity": 0,
         "objective": objective,
@@ -136,40 +187,44 @@ def test_xgb_iris(
     bst = xgb.train(
         param,
         dtrain,
-        num_boost_round=num_round,
-        evals=[(dtrain, "train"), (dtest, "test")],
+        num_boost_round=num_boost_round,
     )
 
-    if model_format == "json":
-        model_name = "iris.json"
-        model_path = os.path.join(tmpdir, model_name)
-        bst.save_model(model_path)
-        model = treelite.frontend.load_xgboost_model(filename=model_path)
-    else:
-        model_name = "iris.model"
-        model_path = os.path.join(tmpdir, model_name)
-        bst.save_model(model_path)
-        model = treelite.frontend.load_xgboost_model_legacy_binary(filename=model_path)
+    model = treelite.frontend.from_xgboost(bst)
     assert model.num_feature == dtrain.num_col()
-    assert model.num_tree == num_round * num_class * num_parallel_tree
-    libpath = os.path.join(tmpdir, "iris" + _libext())
-    tl2cgen.export_lib(
-        model, toolchain=toolchain, libpath=libpath, params={}, verbose=True
-    )
+    assert model.num_tree == num_boost_round * num_class * num_parallel_tree
 
-    predictor = tl2cgen.Predictor(libpath=libpath, verbose=True)
-    assert predictor.num_feature == dtrain.num_col()
-    assert predictor.num_target == 1
-    np.testing.assert_array_equal(predictor.num_class, [num_class])
-    dmat = tl2cgen.DMatrix(X_test, dtype="float32")
-    out_pred = predictor.predict(dmat)
+    with TemporaryDirectory() as tmpdir:
+        libpath = pathlib.Path(tmpdir) / ("iris" + _libext())
+        tl2cgen.export_lib(
+            model,
+            toolchain=toolchain,
+            libpath=libpath,
+            params={"parallel_comp": model.num_tree},
+            verbose=True,
+        )
 
-    if objective == "multi:softmax":
-        out_pred = np.argmax(out_pred, axis=2)
-        expected_pred = bst.predict(dtest, strict_shape=True)
-    else:
-        expected_pred = bst.predict(dtest, strict_shape=True)[:, np.newaxis, :]
-    np.testing.assert_almost_equal(out_pred, expected_pred, decimal=5)
+        predictor = tl2cgen.Predictor(libpath=libpath, verbose=True)
+        assert predictor.num_feature == dtrain.num_col()
+        assert predictor.num_target == 1
+        np.testing.assert_array_equal(predictor.num_class, [num_class])
+        dtest = tl2cgen.DMatrix(X_pred, dtype="float32")
+        out_pred = predictor.predict(dtest, pred_margin=pred_margin)
+
+        if objective == "multi:softmax" and not pred_margin:
+            out_pred = np.argmax(out_pred, axis=2)
+            expected_pred = bst.predict(
+                xgb.DMatrix(X_pred), strict_shape=True, validate_features=False
+            )
+        else:
+            expected_pred = bst.predict(
+                xgb.DMatrix(X_pred),
+                strict_shape=True,
+                output_margin=pred_margin,
+                validate_features=False,
+            )[:, np.newaxis, :]
+
+        np.testing.assert_almost_equal(out_pred, expected_pred, decimal=5)
 
 
 @pytest.mark.parametrize("model_format", ["binary", "json"])
