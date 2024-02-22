@@ -24,4 +24,4 @@ dependencies:
 - awscli
 - pip
 - python-build
-- treelite=4.1
+- treelite=4.1.1
