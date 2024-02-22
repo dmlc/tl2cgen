@@ -1,18 +1,17 @@
 /*!
- * Copyright (c) 2023 by Contributors
+ * Copyright (c) 2024 by Contributors
  * \file compiler_param.h
- * \brief Parameters for tree compiler
+ * \brief Compiler parameters
  * \author Hyunsu Cho
  */
 #ifndef TL2CGEN_COMPILER_PARAM_H_
 #define TL2CGEN_COMPILER_PARAM_H_
 
-#include <limits>
 #include <string>
 
 namespace tl2cgen::compiler {
 
-/*! \brief parameters for tree compiler */
+/*! \brief Parameters to control code generation */
 struct CompilerParam {
   /*!
    * \defgroup compiler_param Parameters for tree compiler
@@ -24,30 +23,19 @@ struct CompilerParam {
    * Use :py:func:`tl2cgen.annotate_branch` to generate this file.
    * \endverbatim
    */
-  std::string annotate_in;
+  std::string annotate_in{"NULL"};
   /*! \brief Whether to quantize threshold points (0: no, >0: yes) */
-  int quantize;
+  int quantize{0};
   /*! \brief Option to enable parallel compilation;
              if set to nonzero, the trees will be evely distributed
              into ``[parallel_comp]`` files. Set this option to improve
              compilation time and reduce memory consumption during
              compilation. */
-  int parallel_comp;
+  int parallel_comp{0};
   /*! \brief If >0, produce extra messages */
-  int verbose;
+  int verbose{0};
   /*! \brief Native lib name (without extension) */
-  std::string native_lib_name;
-  /*! \brief Parameter for folding rarely visited subtrees (no if/else blocks);
-             all nodes whose data counts are lower than that of the root node
-             of the decision tree by ``[code_folding_req]`` will be
-             folded. To diable folding, set to ``+inf``. If hessian sums are
-             available, they will be used as proxies of data counts. */
-  double code_folding_req;
-  /*! \brief Only applicable when ``compiler`` is set to ``failsafe``. If set to a positive value,
-             the fail-safe compiler will not emit large constant arrays to the C code. Instead,
-             the arrays will be emitted as an ELF binary (Linux only). For large arrays, it is
-             much faster to directly dump ELF binaries than to pass them to a C compiler. */
-  int dump_array_as_elf;
+  std::string native_lib_name{"predictor"};
   /*! \} */
 
   static CompilerParam ParseFromJSON(char const* param_json_str);

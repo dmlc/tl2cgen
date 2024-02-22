@@ -1,9 +1,9 @@
 """Suite of basic tests"""
+
 import itertools
 import os
 import pathlib
 import subprocess
-import sys
 from zipfile import ZipFile
 
 import pytest
@@ -16,7 +16,7 @@ from .metadata import (
     format_libpath_for_example_model,
     load_example_model,
 )
-from .util import check_predictor, does_not_raise, os_compatible_toolchains, os_platform
+from .util import check_predictor, os_compatible_toolchains, os_platform
 
 
 @pytest.mark.parametrize(
@@ -59,36 +59,6 @@ def test_basic(
     )
     predictor = tl2cgen.Predictor(libpath=libpath, verbose=True)
     check_predictor(predictor, dataset)
-
-
-@pytest.mark.parametrize("toolchain", os_compatible_toolchains())
-@pytest.mark.parametrize("use_elf", [True, False])
-@pytest.mark.parametrize("dataset", ["mushroom", "dermatology", "toy_categorical"])
-def test_failsafe_compiler(tmpdir, dataset, use_elf, toolchain):
-    """Test 'failsafe' compiler"""
-    libpath = format_libpath_for_example_model(dataset, prefix=tmpdir)
-    model = load_example_model(dataset)
-
-    params = {"dump_array_as_elf": (1 if use_elf else 0)}
-
-    is_linux = sys.platform.startswith("linux")
-    # Expect TL2cgen to throw error if we try to use dump_array_as_elf on non-Linux OS
-    # Also, failsafe compiler is only available for XGBoost models
-    if ((not is_linux) and use_elf) or example_model_db[dataset].format != "xgboost":
-        expect_raises = pytest.raises(tl2cgen.TL2cgenError)
-    else:
-        expect_raises = does_not_raise()
-    with expect_raises:
-        tl2cgen.export_lib(
-            model,
-            compiler="failsafe",
-            toolchain=toolchain,
-            libpath=libpath,
-            params=params,
-            verbose=True,
-        )
-        predictor = tl2cgen.Predictor(libpath=libpath, verbose=True)
-        check_predictor(predictor, dataset)
 
 
 @pytest.mark.skipif(os_platform() == "windows", reason="Make unavailable on Windows")

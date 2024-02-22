@@ -1,14 +1,14 @@
 """Pytest fixtures to initialize tests"""
+
 import pathlib
 import tempfile
 
 import pytest
-import treelite
 from sklearn.datasets import load_svmlight_file
 
 import tl2cgen
 
-from .metadata import example_model_db
+from .metadata import example_model_db, load_example_model
 
 
 @pytest.fixture(scope="session")
@@ -17,10 +17,7 @@ def annotation():
     with tempfile.TemporaryDirectory(dir=".") as tmpdir:
 
         def compute_annotation(dataset):
-            model = treelite.Model.load(
-                example_model_db[dataset].model,
-                model_format=example_model_db[dataset].format,
-            )
+            model = load_example_model(dataset)
             if example_model_db[dataset].dtrain is None:
                 return None
             dtrain = tl2cgen.DMatrix(

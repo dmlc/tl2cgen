@@ -7,6 +7,8 @@
 #ifndef TL2CGEN_DETAIL_PREDICTOR_SHARED_LIBRARY_H_
 #define TL2CGEN_DETAIL_PREDICTOR_SHARED_LIBRARY_H_
 
+#include <tl2cgen/logging.h>
+
 #include <string>
 
 namespace tl2cgen::predictor::detail {

@@ -1,14 +1,16 @@
 """
 Predictor module
 """
+
 import ctypes
 import pathlib
 from typing import Optional, Union
 
+import numpy as np
+
 from .contrib.util import _libext
 from .data import DMatrix
 from .exception import TL2cgenError
-from .handle_class import _OutputVector
 from .libloader import _LIB, _check_call
 from .util import c_str, py_str
 
@@ -37,6 +39,8 @@ class Predictor:
         nthread: Optional[int] = None,
         verbose: bool = False,
     ):
+        self.handle = None
+
         nthread = nthread if nthread is not None else -1
         libpath = pathlib.Path(libpath).expanduser().resolve()
         if libpath.is_dir():
@@ -85,29 +89,14 @@ class Predictor:
         return self.num_feature_
 
     @property
+    def num_target(self):
+        """Query number of output targets"""
+        return self.num_target_
+
+    @property
     def num_class(self):
-        """Query number of output groups of the model"""
+        """Query number of class for each output target"""
         return self.num_class_
-
-    @property
-    def pred_transform(self):
-        """Query pred transform of the model"""
-        return self.pred_transform_
-
-    @property
-    def global_bias(self):
-        """Query global bias of the model"""
-        return self.global_bias_
-
-    @property
-    def sigmoid_alpha(self):
-        """Query sigmoid alpha of the model"""
-        return self.sigmoid_alpha_
-
-    @property
-    def ratio_c(self):
-        """Query sigmoid alpha of the model"""
-        return self.ratio_c_
 
     @property
     def threshold_type(self):
@@ -142,84 +131,68 @@ class Predictor:
         """
         if not isinstance(dmat, DMatrix):
             raise TL2cgenError("dmat must be of type DMatrix")
-        result_size = ctypes.c_size_t()
+        out_shape = ctypes.POINTER(ctypes.c_uint64)()
+        out_ndim = ctypes.c_uint64()
         _check_call(
-            _LIB.TL2cgenPredictorQueryResultSize(
-                self.handle, dmat.handle, ctypes.byref(result_size)
+            _LIB.TL2cgenPredictorGetOutputShape(
+                self.handle,
+                dmat.handle,
+                ctypes.byref(out_shape),
+                ctypes.byref(out_ndim),
             )
         )
-
-        out_result = _OutputVector(
-            predictor_handle=self.handle,
-            dmat_handle=dmat.handle,
+        output_shape = np.copy(
+            np.ctypeslib.as_array(out_shape, shape=(out_ndim.value,)), order="C"
         )
-        out_result_size = ctypes.c_size_t()
+        if self.leaf_output_type == "float32":
+            output_array_dtype = np.float32
+            output_array_cptr_type = ctypes.POINTER(ctypes.c_float)
+        elif self.leaf_output_type == "float64":
+            output_array_dtype = np.float64
+            output_array_cptr_type = ctypes.POINTER(ctypes.c_double)  # type: ignore
+        else:
+            raise TL2cgenError(f"Unknown leaf_output_type {self.leaf_output_type}")
+
+        output_array = np.zeros(shape=output_shape, dtype=output_array_dtype, order="C")
         _check_call(
             _LIB.TL2cgenPredictorPredictBatch(
                 self.handle,
                 dmat.handle,
                 ctypes.c_int(1 if verbose else 0),
                 ctypes.c_int(1 if pred_margin else 0),
-                out_result.handle,
-                ctypes.byref(out_result_size),
+                output_array.ctypes.data_as(output_array_cptr_type),
             )
         )
-
-        out_result_array = out_result.toarray()
-        idx = int(out_result_size.value)
-        res = out_result_array[0:idx].reshape((dmat.shape[0], -1))
-        if self.num_class_ > 1 and dmat.shape[0] != idx:
-            res = res.reshape((-1, self.num_class_))
-
-        return res
+        return output_array
 
     def _load_metadata(self, handle: ctypes.c_void_p) -> None:
-        # Save # of features
-        num_feature = ctypes.c_size_t()
+        num_feature = ctypes.c_int32()
         _check_call(
-            _LIB.TL2cgenPredictorQueryNumFeature(handle, ctypes.byref(num_feature))
+            _LIB.TL2cgenPredictorGetNumFeature(handle, ctypes.byref(num_feature))
         )
         self.num_feature_ = num_feature.value
-        # Save # of classes
-        num_class = ctypes.c_size_t()
-        _check_call(_LIB.TL2cgenPredictorQueryNumClass(handle, ctypes.byref(num_class)))
-        self.num_class_ = num_class.value
-        # Save # of pred transform
-        pred_transform = ctypes.c_char_p()
+
+        num_target = ctypes.c_int32()
+        _check_call(_LIB.TL2cgenPredictorGetNumTarget(handle, ctypes.byref(num_target)))
+        self.num_target_ = num_target.value
+
+        num_class = np.zeros((self.num_target_,), dtype=np.int32)
         _check_call(
-            _LIB.TL2cgenPredictorQueryPredTransform(
-                handle, ctypes.byref(pred_transform)
+            _LIB.TL2cgenPredictorGetNumClass(
+                handle, num_class.ctypes.data_as(ctypes.POINTER(ctypes.c_int32))
             )
         )
-        self.pred_transform_ = py_str(pred_transform.value)
-        # Save # of sigmoid alpha
-        sigmoid_alpha = ctypes.c_float()
-        _check_call(
-            _LIB.TL2cgenPredictorQuerySigmoidAlpha(handle, ctypes.byref(sigmoid_alpha))
-        )
-        self.sigmoid_alpha_ = sigmoid_alpha.value
-        # Save # of ratio C
-        ratio_c = ctypes.c_float()
-        _check_call(_LIB.TL2cgenPredictorQueryRatioC(handle, ctypes.byref(ratio_c)))
-        self.ratio_c_ = ratio_c.value
-        # Save # of global bias
-        global_bias = ctypes.c_float()
-        _check_call(
-            _LIB.TL2cgenPredictorQueryGlobalBias(handle, ctypes.byref(global_bias))
-        )
-        self.global_bias_ = global_bias.value
-        # Save threshold type
+        self.num_class_ = num_class
+
         threshold_type = ctypes.c_char_p()
         _check_call(
-            _LIB.TL2cgenPredictorQueryThresholdType(
-                handle, ctypes.byref(threshold_type)
-            )
+            _LIB.TL2cgenPredictorGetThresholdType(handle, ctypes.byref(threshold_type))
         )
         self.threshold_type_ = py_str(threshold_type.value)
-        # Save leaf output type
+
         leaf_output_type = ctypes.c_char_p()
         _check_call(
-            _LIB.TL2cgenPredictorQueryLeafOutputType(
+            _LIB.TL2cgenPredictorGetLeafOutputType(
                 handle, ctypes.byref(leaf_output_type)
             )
         )

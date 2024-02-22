@@ -1,4 +1,5 @@
 """Utility functions for hypothesis-based testing"""
+
 # pylint: disable=differing-param-doc,missing-type-doc
 
 from sys import platform as _platform
@@ -47,7 +48,7 @@ def standard_classification_datasets(
     shuffle=just(True),
     random_state=None,
 ):
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-arguments
     """
     Returns a strategy to generate classification problem input datasets.
     Note:
@@ -197,6 +198,7 @@ def standard_regression_datasets(
     shuffle=just(True),
     random_state=None,
 ):
+    # pylint: disable=too-many-arguments
     """
     Returns a strategy to generate regression problem input datasets.
     Note:

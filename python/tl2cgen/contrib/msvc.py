@@ -1,6 +1,7 @@
 """
 Tools to interact with Microsoft Visual C++ (MSVC)
 """
+
 import itertools
 import os
 import pathlib

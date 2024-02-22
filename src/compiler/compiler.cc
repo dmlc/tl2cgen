@@ -1,83 +1,71 @@
 /*!
- * Copyright (c) 2023 by Contributors
+ * Copyright (c) 2024 by Contributors
  * \file compiler.cc
- * \brief Registry of compilers
+ * \brief Compiler that generates C code from a tree model
+ * \author Hyunsu Cho
  */
-#include <rapidjson/document.h>
+#include <tl2cgen/annotator.h>
 #include <tl2cgen/compiler.h>
 #include <tl2cgen/compiler_param.h>
-#include <tl2cgen/detail/compiler/ast_native.h>
-#include <tl2cgen/detail/compiler/failsafe.h>
-#include <tl2cgen/logging.h>
+#include <tl2cgen/detail/compiler/ast/builder.h>
+#include <tl2cgen/detail/compiler/codegen/codegen.h>
+#include <tl2cgen/detail/compiler/codegen/format_util.h>
+#include <tl2cgen/detail/filesystem.h>
+#include <treelite/tree.h>
 
-#include <limits>
+#include <filesystem>
+#include <fstream>
+#include <string>
 
-namespace tl2cgen {
+namespace {
 
-Compiler* Compiler::Create(std::string const& name, char const* param_json_str) {
-  compiler::CompilerParam param = compiler::CompilerParam::ParseFromJSON(param_json_str);
-  if (name == "ast_native") {
-    return new compiler::detail::ASTNativeCompiler(param);
-  } else if (name == "failsafe") {
-    return new compiler::detail::FailSafeCompiler(param);
-  } else {
-    TL2CGEN_LOG(FATAL) << "Unrecognized compiler '" << name << "'";
-    return nullptr;
+namespace detail = tl2cgen::compiler::detail;
+
+// Lower the tree model to AST using the AST builder, and then return the builder object.
+detail::ast::ASTBuilder LowerToAST(
+    treelite::Model const& model, tl2cgen::compiler::CompilerParam const& param) {
+  /* 1. Lower the tree ensemble model into Abstract Syntax Tree (AST) */
+  detail::ast::ASTBuilder builder;
+  builder.BuildAST(model);
+
+  /* 2. Apply optimization passes to AST */
+  if (param.annotate_in != "NULL") {
+    auto annotation_path
+        = std::filesystem::weakly_canonical(std::filesystem::u8path(param.annotate_in));
+    tl2cgen::BranchAnnotator annotator;
+    std::ifstream fi(annotation_path);
+    annotator.Load(fi);
+    auto const annotation = annotator.Get();
+    builder.LoadDataCounts(annotation);
   }
+  builder.SplitIntoTUs(param.parallel_comp);
+  if (param.quantize > 0) {
+    builder.GenerateIsCategoricalArray();
+    builder.QuantizeThresholds();
+  }
+  return builder;
 }
 
-namespace compiler {
+}  // anonymous namespace
 
-CompilerParam CompilerParam::ParseFromJSON(char const* param_json_str) {
-  CompilerParam param;
-  // Default values
-  param.annotate_in = "NULL";
-  param.quantize = 0;
-  param.parallel_comp = 0;
-  param.verbose = 0;
-  param.native_lib_name = "predictor";
-  param.code_folding_req = std::numeric_limits<double>::infinity();
-  param.dump_array_as_elf = 0;
+namespace tl2cgen::compiler {
 
-  rapidjson::Document doc;
-  doc.Parse(param_json_str);
-  TL2CGEN_CHECK(doc.IsObject()) << "Got an invalid JSON string:\n" << param_json_str;
-  for (auto const& e : doc.GetObject()) {
-    const std::string key = e.name.GetString();
-    if (key == "annotate_in") {
-      TL2CGEN_CHECK(e.value.IsString()) << "Expected a string for 'annotate_in'";
-      param.annotate_in = e.value.GetString();
-    } else if (key == "quantize") {
-      TL2CGEN_CHECK(e.value.IsInt()) << "Expected an integer for 'quantize'";
-      param.quantize = e.value.GetInt();
-      TL2CGEN_CHECK_GE(param.quantize, 0) << "'quantize' must be 0 or greater";
-    } else if (key == "parallel_comp") {
-      TL2CGEN_CHECK(e.value.IsInt()) << "Expected an integer for 'parallel_comp'";
-      param.parallel_comp = e.value.GetInt();
-      TL2CGEN_CHECK_GE(param.parallel_comp, 0) << "'parallel_comp' must be 0 or greater";
-    } else if (key == "verbose") {
-      TL2CGEN_CHECK(e.value.IsInt()) << "Expected an integer for 'verbose'";
-      param.verbose = e.value.GetInt();
-    } else if (key == "native_lib_name") {
-      TL2CGEN_CHECK(e.value.IsString()) << "Expected a string for 'native_lib_name'";
-      param.native_lib_name = e.value.GetString();
-    } else if (key == "code_folding_req") {
-      TL2CGEN_CHECK(e.value.IsDouble())
-          << "Expected a floating-point decimal for 'code_folding_req'";
-      param.code_folding_req = e.value.GetDouble();
-      TL2CGEN_CHECK_GE(param.code_folding_req, 0) << "'code_folding_req' must be 0 or greater";
-    } else if (key == "dump_array_as_elf") {
-      TL2CGEN_CHECK(e.value.IsInt()) << "Expected an integer for 'dump_array_as_elf'";
-      param.dump_array_as_elf = e.value.GetInt();
-      TL2CGEN_CHECK_GE(param.dump_array_as_elf, 0) << "'dump_array_as_elf' must be 0 or greater";
-    } else {
-      TL2CGEN_LOG(FATAL) << "Unrecognized key '" << key << "' in JSON";
-    }
-  }
-
-  return param;
+void CompileModel(treelite::Model const& model, CompilerParam const& param,
+    std::filesystem::path const& dirpath) {
+  tl2cgen::detail::filesystem::CreateDirectoryIfNotExist(dirpath);
+  auto builder = LowerToAST(model, param);
+  /* Generate C code */
+  detail::codegen::CodeCollection gencode;
+  detail::codegen::GenerateCodeFromAST(builder.GetRootNode(), gencode);
+  // Write C code to disk
+  detail::codegen::WriteCodeToDisk(dirpath, gencode);
+  // Write recipe.json
+  detail::codegen::WriteBuildRecipeToDisk(dirpath, param.native_lib_name, gencode);
 }
 
-}  // namespace compiler
+std::string DumpAST(treelite::Model const& model, CompilerParam const& param) {
+  auto builder = LowerToAST(model, param);
+  return builder.GetDump();
+}
 
-}  // namespace tl2cgen
+}  // namespace tl2cgen::compiler

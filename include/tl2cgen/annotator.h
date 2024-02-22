@@ -52,7 +52,7 @@ class BranchAnnotator {
    * \code
    *   Annotator annotator
    *   annotator.Load(fi);  // load from a stream
-   *   std::vector<std::vector<size_t>> annot = annotator.Get();
+   *   std::vector<std::vector<std::uint64_t>> annot = annotator.Get();
    *   // access the frequency count for a specific node in a tree
    *   TL2CGEN_LOG(INFO) << "Tree " << tree_id << ", Node " << node_id << ": "
    *                     << annot[tree_id][node_id];

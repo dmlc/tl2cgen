@@ -1,4 +1,5 @@
 """Rename Python wheel to contain commit ID"""
+
 import argparse
 import pathlib
 

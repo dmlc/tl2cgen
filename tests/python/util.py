@@ -4,26 +4,16 @@ import os
 import tempfile
 from contextlib import contextmanager
 from sys import platform as _platform
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator, List
 
 import numpy as np
+import treelite
 from sklearn.datasets import load_svmlight_file
 
 import tl2cgen
 from tl2cgen.contrib.util import _libext
 
-from .metadata import example_model_db
-
-
-def load_txt(filename: str) -> Optional[np.ndarray]:
-    """Get 1D array from text file"""
-    if filename is None:
-        return None
-    content = []
-    with open(filename, "r", encoding="UTF-8") as f:
-        for line in f:
-            content.append(float(line))
-    return np.array(content, dtype=np.float32)
+from .metadata import example_model_db, load_example_model
 
 
 def os_compatible_toolchains() -> List[str]:
@@ -76,31 +66,20 @@ def check_predictor(predictor: tl2cgen.Predictor, dataset: str) -> None:
     )
     out_margin = predictor.predict(dmat, pred_margin=True)
     out_prob = predictor.predict(dmat)
-    check_predictor_output(dataset, dmat.shape, out_margin, out_prob)
+    check_predictor_output(dataset, out_margin, out_prob)
 
 
 def check_predictor_output(
-    dataset: str, shape: Tuple[int, ...], out_margin: np.ndarray, out_prob: np.ndarray
+    dataset: str, out_margin: np.ndarray, out_prob: np.ndarray
 ) -> None:
     """Check whether a predictor produces correct predictions"""
-    expected_margin = load_txt(example_model_db[dataset].expected_margin)
-    if expected_margin is not None:
-        if example_model_db[dataset].is_multiclass:
-            expected_margin = expected_margin.reshape((shape[0], -1))
-        else:
-            expected_margin = expected_margin.reshape((-1, 1))
-        assert (
-            out_margin.shape == expected_margin.shape
-        ), f"out_margin.shape = {out_margin.shape}, expected_margin.shape = {expected_margin.shape}"
-        np.testing.assert_almost_equal(out_margin, expected_margin, decimal=5)
+    tl_model = load_example_model(dataset)
 
-    expected_prob = load_txt(example_model_db[dataset].expected_prob)
-    if expected_prob is not None:
-        if example_model_db[dataset].is_multiclass:
-            expected_prob = expected_prob.reshape((shape[0], -1))
-        else:
-            expected_prob = expected_prob.reshape((-1, 1))
-        np.testing.assert_almost_equal(out_prob, expected_prob, decimal=5)
+    X_test = load_svmlight_file(example_model_db[dataset].dtest, zero_based=True)[0]
+    expected_margin = treelite.gtil.predict(tl_model, X_test, pred_margin=True)
+    np.testing.assert_almost_equal(out_margin, expected_margin, decimal=5)
+    expected_prob = treelite.gtil.predict(tl_model, X_test)
+    np.testing.assert_almost_equal(out_prob, expected_prob, decimal=5)
 
 
 @contextmanager

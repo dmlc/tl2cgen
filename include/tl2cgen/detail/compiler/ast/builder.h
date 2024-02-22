@@ -19,8 +19,7 @@
 
 namespace treelite {
 
-template <typename ThresholdType, typename LeafOutputType>
-class ModelImpl;
+class Model;
 
 template <typename ThresholdType, typename LeafOutputType>
 class Tree;
@@ -29,81 +28,53 @@ class Tree;
 
 namespace tl2cgen::compiler::detail::ast {
 
-// forward declarations
-template <typename ThresholdType, typename LeafOutputType>
-class ASTBuilder;
-struct CodeFoldingContext;
-template <typename ThresholdType, typename LeafOutputType>
-bool fold_code(ASTNode*, CodeFoldingContext*, ASTBuilder<ThresholdType, LeafOutputType>*);
-
-template <typename ThresholdType, typename LeafOutputType>
 class ASTBuilder {
  public:
-  ASTBuilder() : output_vector_flag(false), quantize_threshold_flag(false), main_node(nullptr) {}
+  ASTBuilder() : main_node_(nullptr) {}
 
-  /* \brief initially build AST from model */
-  void BuildAST(treelite::ModelImpl<ThresholdType, LeafOutputType> const& model);
-  /* \brief generate is_categorical[] array, which tells whether each feature
+  /* \brief Initially build AST from model */
+  void BuildAST(treelite::Model const& model);
+  /* \brief Generate is_categorical[] array, which tells whether each feature
             is categorical or numerical */
-  std::vector<bool> GenerateIsCategoricalArray();
+  void GenerateIsCategoricalArray();
   /*
-   * \brief fold rarely visited subtrees into tight loops (don't produce
-   *        if/else blocks). Rarity of each node is determined by its
-   *        data count and/or hessian sum: any node is "rare" if its data count
-   *        or hessian sum is lower than the proscribed threshold.
-   * \param magnitude_req all nodes whose data counts are lower than that of
-   *                      the root node of the decision tree by [magnitude_req]
-   *                      will be folded. To diable folding, set to +inf. If
-   *                      hessian sums are available instead of data counts,
-   *                      hessian sums will be used as a proxy of data counts
-   * \param create_new_translation_unit if true, place folded loops in
-   *                                    separate translation units
-   * \param whether at least one subtree was folded
+   * \brief Split prediction function into multiple translation units
+   * \param num_tu Number of translation units
    */
-  bool FoldCode(double magnitude_req, bool create_new_translation_unit = false);
-  /*
-   * \brief split prediction function into multiple translation units
-   * \param parallel_comp number of translation units
-   */
-  void Split(int parallel_comp);
-  /* \brief replace split thresholds with integers */
+  void SplitIntoTUs(int num_tu);
+  /* \brief Replace split thresholds with integers */
   void QuantizeThresholds();
   /* \brief Load data counts from annotation file */
-  void LoadDataCounts(std::vector<std::vector<uint64_t>> const& counts);
+  void LoadDataCounts(std::vector<std::vector<std::uint64_t>> const& counts);
   /*
    * \brief Get a text representation of AST
    */
   std::string GetDump() const;
 
   inline ASTNode const* GetRootNode() {
-    return main_node;
+    return main_node_;
   }
 
  private:
-  friend bool fold_code<>(
-      ASTNode*, CodeFoldingContext*, ASTBuilder<ThresholdType, LeafOutputType>*);
-
   template <typename NodeType, typename... Args>
   NodeType* AddNode(ASTNode* parent, Args&&... args) {
     std::unique_ptr<NodeType> node(new NodeType(std::forward<Args>(args)...));
     NodeType* ref = node.get();
-    ref->parent = parent;
-    nodes.push_back(std::move(node));
+    ref->parent_ = parent;
+    ref->meta_ = &meta_;
+    nodes_.push_back(std::move(node));
     return ref;
   }
 
-  ASTNode* BuildASTFromTree(treelite::Tree<ThresholdType, LeafOutputType> const& tree, int tree_id,
-      int nid, ASTNode* parent);
+  template <typename ThresholdType, typename LeafOutputType>
+  ASTNode* BuildASTFromTree(ASTNode* parent,
+      treelite::Tree<ThresholdType, LeafOutputType> const& tree, int tree_id,
+      std::int32_t target_id, std::int32_t class_id, int nid);
 
-  // keep tract of all nodes built so far, to prevent memory leak
-  std::vector<std::unique_ptr<ASTNode>> nodes;
-  bool output_vector_flag;
-  bool quantize_threshold_flag;
-  int num_feature;
-  bool average_output_flag;
-  ASTNode* main_node;
-  std::vector<bool> is_categorical;
-  std::map<std::string, std::string> model_param;
+  // Keep tract of all nodes built so far, to prevent memory leak
+  std::vector<std::unique_ptr<ASTNode>> nodes_;
+  ASTNode* main_node_;
+  ast::ModelMeta meta_;
 };
 
 }  // namespace tl2cgen::compiler::detail::ast

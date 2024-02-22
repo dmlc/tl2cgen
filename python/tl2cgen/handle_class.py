@@ -1,16 +1,14 @@
 """Internal classes to hold native handles"""
-import ctypes
-import json
-import pathlib
-from typing import Any, Dict, Optional, Union
 
-import numpy as np
+import ctypes
+import pathlib
+from typing import Union
+
 import treelite
 
 from .data import DMatrix
-from .dtypes import type_info_to_ctypes_type
 from .libloader import _LIB, _check_call
-from .util import c_str, py_str
+from .util import c_str
 
 
 class _TreeliteModel:
@@ -83,90 +81,3 @@ class _Annotator:
         if self.handle:
             _check_call(_LIB.TL2cgenAnnotationFree(self.handle))
             self.handle = None
-
-
-class _Compiler:
-    """Compiler object"""
-
-    def __init__(
-        self,
-        params: Optional[Dict[str, Any]],
-        compiler: str = "ast_native",
-        verbose: bool = False,
-    ):
-        self.handle = ctypes.c_void_p()
-        if params is None:
-            params = {}
-        if verbose:
-            params["verbose"] = 1
-        if isinstance(params.get("annotate_in"), pathlib.Path):
-            params["annotate_in"] = str(params["annotate_in"])
-        params_json_str = json.dumps(params)
-        _check_call(
-            _LIB.TL2cgenCompilerCreate(
-                c_str(compiler), c_str(params_json_str), ctypes.byref(self.handle)
-            )
-        )
-
-    def compile(self, model: _TreeliteModel, dirpath: Union[str, pathlib.Path]) -> None:
-        """Generate prediction code"""
-        dirpath = pathlib.Path(dirpath).expanduser().resolve()
-        _check_call(
-            _LIB.TL2cgenCompilerGenerateCode(
-                self.handle, model.handle, c_str(str(dirpath))
-            )
-        )
-
-    def __del__(self):
-        if self.handle:
-            _check_call(_LIB.TL2cgenCompilerFree(self.handle))
-            self.handle = None
-
-
-class _OutputVector:
-    """Output vector object, used to hold prediction results from Predictor"""
-
-    def __init__(
-        self,
-        predictor_handle: ctypes.c_void_p,
-        dmat_handle: ctypes.c_void_p,
-    ):
-        self.handle = ctypes.c_void_p()
-        _check_call(
-            _LIB.TL2cgenPredictorCreateOutputVector(
-                predictor_handle, dmat_handle, ctypes.byref(self.handle)
-            )
-        )
-        type_str = ctypes.c_char_p()
-        _check_call(
-            _LIB.TL2cgenPredictorQueryLeafOutputType(
-                predictor_handle, ctypes.byref(type_str)
-            )
-        )
-        self.typestr_ = py_str(type_str.value)
-        length = ctypes.c_size_t()
-        _check_call(
-            _LIB.TL2cgenPredictorQueryResultSize(
-                predictor_handle, dmat_handle, ctypes.byref(length)
-            )
-        )
-        self.length_ = length.value
-
-    def __del__(self):
-        if self.handle:
-            _check_call(_LIB.TL2cgenPredictorDeleteOutputVector(self.handle))
-            self.handle = None
-
-    def toarray(self):
-        """Convert to NumPy array"""
-        ptr = ctypes.c_void_p()
-        _check_call(
-            _LIB.TL2cgenPredictorGetRawPointerFromOutputVector(
-                self.handle, ctypes.byref(ptr)
-            )
-        )
-        ptr_type = ctypes.POINTER(type_info_to_ctypes_type(self.typestr_))
-        casted_ptr = ctypes.cast(ptr, ptr_type)
-        return np.copy(
-            np.ctypeslib.as_array(casted_ptr, shape=(self.length_,)), order="C"
-        )

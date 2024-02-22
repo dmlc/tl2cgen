@@ -1,4 +1,5 @@
 """Generator for Makefile and CMakeLists.txt"""
+
 import pathlib
 from typing import List, Optional, Union
 

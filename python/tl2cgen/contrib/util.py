@@ -1,4 +1,5 @@
 """Utilities for contrib module"""
+
 import os
 import subprocess
 from sys import platform as _platform

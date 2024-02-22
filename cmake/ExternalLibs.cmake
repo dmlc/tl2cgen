@@ -1,7 +1,7 @@
 include(FetchContent)
 
 # Treelite
-find_package(Treelite 3.4.0)
+find_package(Treelite 4.1.0)
 if (Treelite_FOUND)
   set(TREELITE_FROM_SYSTEM_ROOT TRUE)
   set(TREELITE_LIB treelite::treelite)
@@ -10,11 +10,11 @@ else ()
   FetchContent_Declare(
     treelite
     GIT_REPOSITORY https://github.com/dmlc/treelite.git
-    GIT_TAG 3.9.0
+    GIT_TAG 4.1.0
   )
   set(Treelite_BUILD_STATIC_LIBS ON)
   FetchContent_MakeAvailable(treelite)
-  set_target_properties(treelite treelite_runtime PROPERTIES EXCLUDE_FROM_ALL TRUE)
+  set_target_properties(treelite PROPERTIES EXCLUDE_FROM_ALL TRUE)
   target_include_directories(treelite_static PUBLIC
       $<BUILD_INTERFACE:${treelite_SOURCE_DIR}/include>
       $<BUILD_INTERFACE:${treelite_BINARY_DIR}/include>
@@ -34,7 +34,7 @@ else ()
   FetchContent_Declare(
       fmtlib
       GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-      GIT_TAG 9.1.0
+      GIT_TAG 10.2.1
   )
   FetchContent_MakeAvailable(fmtlib)
   set_target_properties(fmt PROPERTIES EXCLUDE_FROM_ALL TRUE)
@@ -44,6 +44,7 @@ endif ()
 # RapidJSON (header-only library)
 if (NOT TARGET rapidjson)
   add_library(rapidjson INTERFACE)
+  target_compile_definitions(rapidjson INTERFACE -DRAPIDJSON_HAS_STDSTRING=1)
   find_package(RapidJSON)
   if (RapidJSON_FOUND)
     target_include_directories(rapidjson INTERFACE ${RAPIDJSON_INCLUDE_DIRS})
@@ -61,10 +62,28 @@ if (NOT TARGET rapidjson)
   add_library(RapidJSON::rapidjson ALIAS rapidjson)
 endif ()
 
+# mdspan (header-only library)
+message(STATUS "Fetching mdspan...")
+set(MDSPAN_CXX_STANDARD 17 CACHE STRING "")
+FetchContent_Declare(
+      mdspan
+      GIT_REPOSITORY https://github.com/kokkos/mdspan.git
+      GIT_TAG        mdspan-0.6.0
+)
+FetchContent_GetProperties(mdspan)
+if(NOT mdspan_POPULATED)
+  FetchContent_Populate(mdspan)
+  add_subdirectory(${mdspan_SOURCE_DIR} ${mdspan_BINARY_DIR} EXCLUDE_FROM_ALL)
+  message(STATUS "mdspan was downloaded at ${mdspan_SOURCE_DIR}.")
+endif()
+if(MSVC)  # workaround for MSVC 19.x: https://github.com/kokkos/mdspan/issues/276
+  target_compile_options(mdspan INTERFACE "/permissive-")
+endif()
+
 # Google C++ tests
-if (BUILD_CPP_TESTS)
-  find_package(GTest 1.11.0 CONFIG)
-  if (NOT GTEST_FOUND)
+if (BUILD_CPP_TEST)
+  find_package(GTest 1.11.0)
+  if (NOT GTest_FOUND)
     message(STATUS "Did not find Google Test in the system root. Fetching Google Test now...")
     set(gtest_force_shared_crt OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(
@@ -73,7 +92,11 @@ if (BUILD_CPP_TESTS)
         GIT_TAG release-1.11.0
     )
     FetchContent_MakeAvailable(googletest)
-    add_library(GTest::GTest ALIAS gtest)
+    add_library(GTest::gtest ALIAS gtest)
     add_library(GTest::gmock ALIAS gmock)
+    if(IS_DIRECTORY "${googletest_SOURCE_DIR}")
+      # Do not install gtest
+      set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY EXCLUDE_FROM_ALL YES)
+    endif()
   endif ()
 endif ()

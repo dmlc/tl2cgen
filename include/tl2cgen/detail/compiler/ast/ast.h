@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2023 by Contributors
+ * Copyright (c) 2023-2024 by Contributors
  * \file ast.h
  * \brief Definition for AST classes
  * \author Hyunsu Cho
@@ -7,202 +7,148 @@
 #ifndef TL2CGEN_DETAIL_COMPILER_AST_AST_H_
 #define TL2CGEN_DETAIL_COMPILER_AST_AST_H_
 
-#include <fmt/format.h>
-#include <treelite/base.h>
+#include <treelite/enum/operator.h>
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace tl2cgen::compiler::detail::ast {
 
+class ModelMeta;
+
 class ASTNode {
  public:
-  ASTNode* parent;
-  std::vector<ASTNode*> children;
-  int node_id;
-  int tree_id;
-  std::optional<std::uint64_t> data_count;
-  std::optional<double> sum_hess;
+  ASTNode* parent_;
+  std::vector<ASTNode*> children_;
+  ModelMeta* meta_;
+  int node_id_;
+  int tree_id_;
+  std::optional<std::uint64_t> data_count_;
+  std::optional<double> sum_hess_;
   virtual std::string GetDump() const = 0;
   virtual ~ASTNode() = 0;  // force ASTNode to be abstract class
  protected:
-  ASTNode() : parent(nullptr), node_id(-1), tree_id(-1) {}
+  ASTNode() : meta_(nullptr), parent_(nullptr), node_id_(-1), tree_id_(-1) {}
 };
 inline ASTNode::~ASTNode() {}
 
 class MainNode : public ASTNode {
  public:
-  MainNode(treelite::tl_float global_bias, bool average_result, int num_tree, int num_feature)
-      : global_bias(global_bias),
-        average_result(average_result),
-        num_tree(num_tree),
-        num_feature(num_feature) {}
-  treelite::tl_float global_bias;
-  bool average_result;
-  int num_tree;
-  int num_feature;
-
-  std::string GetDump() const override {
-    return fmt::format(
-        "MainNode {{ global_bias: {}, average_result: {}, num_tree: {}, "
-        "num_feature: {} }}",
-        global_bias, average_result, num_tree, num_feature);
-  }
+  MainNode(std::vector<double> base_scores, std::optional<std::vector<std::int32_t>> average_factor,
+      std::string postprocessor)
+      : base_scores_(std::move(base_scores)),
+        average_factor_(std::move(average_factor)),
+        postprocessor_(std::move(postprocessor)) {}
+  std::vector<double> base_scores_;
+  // Each output[target_id, class_id] should be incremented by base_scores_[target_id, class_id].
+  std::optional<std::vector<std::int32_t>> average_factor_;
+  // If model.average_tree_output is True, each output[target_id, class_id] should be divided by
+  // average_factor_[target_id, class_id].
+  // If model.average_tree_output is False, set this field to std::nullopt.
+  std::string postprocessor_;  // Postprocessor to apply after computing raw predictions
+  std::string GetDump() const override;
 };
 
 class TranslationUnitNode : public ASTNode {
  public:
-  explicit TranslationUnitNode(int unit_id) : unit_id(unit_id) {}
-  int unit_id;
-
-  std::string GetDump() const override {
-    return fmt::format("TranslationUnitNode {{ unit_id: {} }}", unit_id);
-  }
+  explicit TranslationUnitNode(int unit_id) : unit_id_(unit_id) {}
+  int unit_id_;
+  std::string GetDump() const override;
 };
 
-template <typename ThresholdType>
 class QuantizerNode : public ASTNode {
  public:
-  explicit QuantizerNode(std::vector<std::vector<ThresholdType>> const& cut_pts)
-      : cut_pts(cut_pts) {}
-  explicit QuantizerNode(std::vector<std::vector<ThresholdType>>&& cut_pts)
-      : cut_pts(std::move(cut_pts)) {}
-  std::vector<std::vector<ThresholdType>> cut_pts;
-
-  std::string GetDump() const override {
-    std::ostringstream oss;
-    for (auto const& vec : cut_pts) {
-      oss << "[ ";
-      for (auto const& e : vec) {
-        oss << e << ", ";
-      }
-      oss << "], ";
-    }
-    return fmt::format("QuantizerNode {{ cut_pts: {} }}", oss.str());
-  }
+  using ThresholdListVariantT
+      = std::variant<std::vector<std::vector<float>>, std::vector<std::vector<double>>>;
+  explicit QuantizerNode(ThresholdListVariantT threshold_list)
+      : threshold_list_(std::move(threshold_list)) {}
+  ThresholdListVariantT threshold_list_;
+  std::string GetDump() const override;
 };
 
-class AccumulatorContextNode : public ASTNode {
+class FunctionNode : public ASTNode {
  public:
-  AccumulatorContextNode() {}
-
-  std::string GetDump() const override {
-    return fmt::format("AccumulatorContextNode {{}}");
-  }
-};
-
-class CodeFolderNode : public ASTNode {
- public:
-  CodeFolderNode() {}
-
-  std::string GetDump() const override {
-    return fmt::format("CodeFolderNode {{}}");
-  }
+  FunctionNode() {}
+  std::string GetDump() const override;
 };
 
 class ConditionNode : public ASTNode {
  public:
-  ConditionNode(unsigned split_index, bool default_left)
-      : split_index(split_index), default_left(default_left) {}
-  unsigned split_index;
-  bool default_left;
-  std::optional<double> gain;
-
-  std::string GetDump() const override {
-    if (gain) {
-      return fmt::format("ConditionNode {{ split_index: {}, default_left: {}, gain: {} }}",
-          split_index, default_left, *gain);
-    } else {
-      return fmt::format(
-          "ConditionNode {{ split_index: {}, default_left: {} }}", split_index, default_left);
-    }
-  }
+  ConditionNode(std::uint32_t split_index, bool default_left)
+      : split_index_(split_index), default_left_(default_left) {}
+  std::uint32_t split_index_;
+  bool default_left_;
+  std::optional<double> gain_;
+  std::string GetDump() const override;
 };
 
-template <typename ThresholdType>
-union ThresholdVariant {
-  ThresholdType float_val;
-  int int_val;
-  explicit ThresholdVariant(ThresholdType val) : float_val(val) {}
-  explicit ThresholdVariant(int val) : int_val(val) {}
-};
-
-template <typename ThresholdType>
 class NumericalConditionNode : public ConditionNode {
  public:
-  NumericalConditionNode(unsigned split_index, bool default_left, bool quantized,
-      treelite::Operator op, ThresholdVariant<ThresholdType> threshold)
+  using ThresholdVariantT = std::variant<float, double>;
+  NumericalConditionNode(std::uint32_t split_index, bool default_left, treelite::Operator op,
+      ThresholdVariantT threshold, std::optional<int> quantized_threshold)
       : ConditionNode(split_index, default_left),
-        quantized(quantized),
-        op(op),
-        threshold(threshold),
-        zero_quantized(-1) {}
-  bool quantized;
-  treelite::Operator op;
-  ThresholdVariant<ThresholdType> threshold;
-  int zero_quantized;  // quantized value of 0.0f (useful when convert_missing_to_zero is set)
-
-  std::string GetDump() const override {
-    return fmt::format(
-        "NumericalConditionNode {{ {}, quantized: {}, op: {}, threshold: {}, "
-        "zero_quantized: {} }}",
-        ConditionNode::GetDump(), quantized, OpName(op),
-        (quantized ? fmt::format("{}", threshold.int_val) : fmt::format("{}", threshold.float_val)),
-        zero_quantized);
-  }
+        op_(op),
+        threshold_(threshold),
+        quantized_threshold_(quantized_threshold),
+        zero_quantized_(-1) {}
+  treelite::Operator op_;
+  ThresholdVariantT threshold_;
+  std::optional<int> quantized_threshold_;
+  int zero_quantized_;  // quantized value of 0.0f (useful when convert_missing_to_zero is set)
+  std::string GetDump() const override;
 };
 
 class CategoricalConditionNode : public ConditionNode {
  public:
-  CategoricalConditionNode(unsigned split_index, bool default_left,
-      std::vector<std::uint32_t> const& matching_categories, bool categories_list_right_child)
+  CategoricalConditionNode(std::uint32_t split_index, bool default_left,
+      std::vector<std::uint32_t> const& category_list, bool category_list_right_child)
       : ConditionNode(split_index, default_left),
-        matching_categories(matching_categories),
-        categories_list_right_child(categories_list_right_child) {}
-  std::vector<std::uint32_t> matching_categories;
-  bool categories_list_right_child;
-
-  std::string GetDump() const override {
-    std::ostringstream oss;
-    oss << "[";
-    for (auto const& e : matching_categories) {
-      oss << e << ", ";
-    }
-    oss << "]";
-    return fmt::format(
-        "CategoricalConditionNode {{ {}, matching_categories: {}, "
-        "categories_list_right_child: {} }}",
-        ConditionNode::GetDump(), oss.str(), categories_list_right_child);
-  }
+        category_list_(category_list),
+        category_list_right_child_(category_list_right_child) {}
+  std::vector<std::uint32_t> category_list_;
+  bool category_list_right_child_;
+  std::string GetDump() const override;
 };
 
-template <typename LeafOutputType>
 class OutputNode : public ASTNode {
  public:
-  explicit OutputNode(LeafOutputType scalar) : is_vector(false), scalar(scalar) {}
-  explicit OutputNode(std::vector<LeafOutputType> const& vector)
-      : is_vector(true), vector(vector) {}
-  bool is_vector;
-  LeafOutputType scalar;
-  std::vector<LeafOutputType> vector;
+  using OutputVariantT = std::variant<std::vector<float>, std::vector<double>>;
+  explicit OutputNode(
+      std::int32_t target_id, std::int32_t class_id, OutputVariantT const& leaf_output)
+      : target_id_(target_id), class_id_(class_id), leaf_output_(leaf_output) {}
+  std::int32_t target_id_, class_id_;
+  OutputVariantT leaf_output_;
+  std::string GetDump() const override;
+};
 
-  std::string GetDump() const override {
-    if (is_vector) {
-      std::ostringstream oss;
-      oss << "[";
-      for (auto const& e : vector) {
-        oss << e << ", ";
-      }
-      oss << "]";
-      return fmt::format("OutputNode {{ is_vector: {}, vector {} }}", is_vector, oss.str());
-    } else {
-      return fmt::format("OutputNode {{ is_vector: {}, scalar: {} }}", is_vector, scalar);
-    }
-  }
+// Metadata about the model
+class ModelMeta {
+ public:
+  std::int32_t num_target_;  // Number of output targets
+  std::vector<std::int32_t> num_class_;  // num_class[i]: Number of classes in i-th target
+  std::array<std::int32_t, 2> leaf_vector_shape_;  // Shape of each leaf output
+  std::int32_t num_feature_;  // Number of features in the training data
+  std::vector<bool> is_categorical_;
+  // is_categorical_[i]: is feature i categorical?
+  float sigmoid_alpha_;  // Parameter to control the "sigmoid" postprocessor
+  float ratio_c_;  // Parameter to control the "exponential_standard_ratio" postprocessor
+  template <typename ThresholdType, typename LeafOutputType>
+  class TypeMeta {
+   public:
+    using threshold_type = ThresholdType;
+    using leaf_output_type = LeafOutputType;
+  };
+  std::variant<TypeMeta<float, float>, TypeMeta<double, double>> type_meta_;
+  // Helper class to remember types for thresholds and leaf outputs
 };
 
 }  // namespace tl2cgen::compiler::detail::ast

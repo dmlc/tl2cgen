@@ -1,6 +1,7 @@
 """
 Tools to interact with toolchains GCC, Clang, and other UNIX compilers
 """
+
 import pathlib
 from typing import Any, Dict, List
 
@@ -49,6 +50,7 @@ def _create_shared_gcc(
     options: List[str],
     verbose: bool,
 ) -> pathlib.Path:
+    # pylint: disable=too-many-arguments
     options += ["-lm"]
     # Specify command to compile an object file
     recipe["object_ext"] = _obj_ext()
