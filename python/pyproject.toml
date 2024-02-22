@@ -29,8 +29,7 @@ dependencies = [
     "numpy",
     "scipy",
     "packaging",
-    "treelite>=3.4,<4",
-    "treelite_runtime>=3.4,<4"  # TODO(hcho3): Remove
+    "treelite>=4.1"
 ]
 
 [project.urls]
