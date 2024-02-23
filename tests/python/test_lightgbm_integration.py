@@ -10,25 +10,26 @@ import pytest
 import scipy.sparse
 import treelite
 from hypothesis import given, settings
-from hypothesis.strategies import sampled_from
-from sklearn.datasets import load_iris, load_svmlight_file
+from hypothesis.strategies import data as hypothesis_callback
+from hypothesis.strategies import integers, just, sampled_from
 from sklearn.model_selection import train_test_split
 
 import tl2cgen
 from tl2cgen.contrib.util import _libext
 
-from .hypothesis_util import standard_regression_datasets, standard_settings
-from .metadata import (
-    example_model_db,
-    format_libpath_for_example_model,
-    load_example_model,
+from .hypothesis_util import (
+    standard_classification_datasets,
+    standard_regression_datasets,
+    standard_settings,
 )
+from .metadata import format_libpath_for_example_model, load_example_model
 from .util import (
     TemporaryDirectory,
     check_predictor,
     has_pandas,
     os_compatible_toolchains,
     os_platform,
+    to_categorical,
 )
 
 try:
@@ -109,28 +110,46 @@ def test_lightgbm_regression(toolchain, objective, reg_sqrt, dataset):
         np.testing.assert_almost_equal(out_pred, expected_pred, decimal=4)
 
 
-@pytest.mark.parametrize("toolchain", os_compatible_toolchains())
-@pytest.mark.parametrize("boosting_type", ["gbdt", "rf"])
-@pytest.mark.parametrize("objective", ["multiclass", "multiclassova"])
+@given(
+    dataset=standard_classification_datasets(
+        n_classes=integers(min_value=3, max_value=5), n_informative=just(5)
+    ),
+    objective=sampled_from(["multiclass", "multiclassova"]),
+    boosting_type=sampled_from(["gbdt", "rf"]),
+    num_boost_round=integers(min_value=5, max_value=50),
+    use_categorical=sampled_from([True, False]),
+    toolchain=sampled_from(os_compatible_toolchains()),
+    callback=hypothesis_callback(),
+)
+@settings(**standard_settings())
 def test_lightgbm_multiclass_classification(
-    tmpdir, objective, boosting_type, toolchain
+    dataset,
+    objective,
+    boosting_type,
+    num_boost_round,
+    use_categorical,
+    toolchain,
+    callback,
 ):
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-arguments
     """Test a multi-class classifier"""
-    model_path = pathlib.Path(tmpdir) / "iris_lightgbm.txt"
-
-    X, y = load_iris(return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, shuffle=False
-    )
-    dtrain = lightgbm.Dataset(X_train, y_train, free_raw_data=False)
-    dtest = lightgbm.Dataset(X_test, y_test, reference=dtrain, free_raw_data=False)
+    X, y = dataset
+    num_class = np.max(y) + 1
+    if use_categorical:
+        n_categorical = callback.draw(integers(min_value=1, max_value=X.shape[1]))
+        df, X_pred = to_categorical(X, n_categorical=n_categorical, invalid_frac=0.1)
+        dtrain = lightgbm.Dataset(
+            df, label=y, free_raw_data=False, categorical_feature="auto"
+        )
+    else:
+        dtrain = lightgbm.Dataset(X, label=y, free_raw_data=False)
+        X_pred = X.copy()
     param = {
         "task": "train",
         "boosting": boosting_type,
         "objective": objective,
         "metric": "multi_logloss",
-        "num_class": 3,
+        "num_class": num_class,
         "num_leaves": 31,
         "learning_rate": 0.05,
     }
@@ -139,39 +158,61 @@ def test_lightgbm_multiclass_classification(
     bst = lightgbm.train(
         param,
         dtrain,
-        num_boost_round=10,
-        valid_sets=[dtrain, dtest],
-        valid_names=["train", "test"],
+        num_boost_round=num_boost_round,
+        valid_sets=[dtrain],
+        valid_names=["train"],
     )
-    bst.save_model(model_path)
+    tl_model = treelite.frontend.from_lightgbm(bst)
+    expected_prob = treelite.gtil.predict(tl_model, X_pred)
+    expected_margin = treelite.gtil.predict(tl_model, X_pred, pred_margin=True)
 
-    predictor = _compile_lightgbm_model(
-        model_path=model_path,
-        libname=f"iris_{objective}",
-        prefix=tmpdir,
-        toolchain=toolchain,
-        params={"quantize": 1},
-        verbose=True,
-    )
+    with TemporaryDirectory() as tmpdir:
+        libpath = pathlib.Path(tmpdir) / (f"lgb_multiclass_{objective}" + _libext())
+        tl2cgen.export_lib(
+            tl_model,
+            toolchain=toolchain,
+            libpath=libpath,
+            params={"parallel_comp": tl_model.num_tree, "quantize": 1},
+        )
+        predictor = tl2cgen.Predictor(libpath)
+        dmat = tl2cgen.DMatrix(X_pred, dtype="float64")
+        out_prob = predictor.predict(dmat)
+        out_margin = predictor.predict(dmat, pred_margin=True)
+        np.testing.assert_almost_equal(out_prob, expected_prob, decimal=5)
+        np.testing.assert_almost_equal(out_margin, expected_margin, decimal=5)
 
-    dmat = tl2cgen.DMatrix(X_test, dtype="float64")
-    out_pred = predictor.predict(dmat)
-    expected_pred = bst.predict(X_test).reshape((X_test.shape[0], 1, -1))
-    np.testing.assert_almost_equal(out_pred, expected_pred, decimal=5)
 
-
-@pytest.mark.parametrize("toolchain", os_compatible_toolchains())
-@pytest.mark.parametrize("objective", ["binary", "xentlambda", "xentropy"])
-def test_lightgbm_binary_classification(tmpdir, objective, toolchain):
-    # pylint: disable=too-many-locals
+@given(
+    dataset=standard_classification_datasets(n_classes=just(2)),
+    objective=sampled_from(["binary", "xentlambda", "xentropy"]),
+    num_boost_round=integers(min_value=5, max_value=10),
+    use_categorical=sampled_from([True, False]),
+    toolchain=sampled_from(os_compatible_toolchains()),
+    callback=hypothesis_callback(),
+)
+@settings(**standard_settings())
+def test_lightgbm_binary_classification(
+    dataset,
+    objective,
+    num_boost_round,
+    use_categorical,
+    toolchain,
+    callback,
+):
+    # pylint: disable=too-many-locals,too-many-arguments
     """Test a binary classifier"""
-    dataset = "mushroom"
-    model_path = pathlib.Path(tmpdir) / "mushroom_lightgbm.txt"
-    dtest_path = example_model_db[dataset].dtest
+    X, y = dataset
+    if use_categorical:
+        n_categorical = callback.draw(integers(min_value=1, max_value=X.shape[1]))
+        df, X_pred = to_categorical(X, n_categorical=n_categorical, invalid_frac=0.1)
+        dtrain = lightgbm.Dataset(
+            df, label=y, free_raw_data=False, categorical_feature="auto"
+        )
+    else:
+        dtrain = lightgbm.Dataset(X, label=y, free_raw_data=False)
+        X_pred = X.copy()
 
-    dtrain = lightgbm.Dataset(example_model_db[dataset].dtrain)
-    dtest = lightgbm.Dataset(dtest_path, reference=dtrain)
-    param = {
+    params = {
         "task": "train",
         "boosting_type": "gbdt",
         "objective": objective,
@@ -179,35 +220,35 @@ def test_lightgbm_binary_classification(tmpdir, objective, toolchain):
         "num_leaves": 7,
         "learning_rate": 0.1,
     }
+
     bst = lightgbm.train(
-        param,
+        params,
         dtrain,
-        num_boost_round=10,
-        valid_sets=[dtrain, dtest],
-        valid_names=["train", "test"],
+        num_boost_round=num_boost_round,
+        valid_sets=[dtrain],
+        valid_names=["train"],
     )
-    bst.save_model(model_path)
+    with TemporaryDirectory() as tmpdir:
+        model_path = pathlib.Path(tmpdir) / f"lgb_binary_{objective}.txt"
+        bst.save_model(model_path)
+        tl_model = treelite.frontend.load_lightgbm_model(model_path)
+        expected_prob = treelite.gtil.predict(tl_model, X_pred)
+        expected_margin = treelite.gtil.predict(tl_model, X_pred, pred_margin=True)
 
-    shape = (dtest.num_data(), 1, -1)
-    expected_prob = bst.predict(dtest_path).reshape(shape)
-    expected_margin = bst.predict(dtest_path, raw_score=True).reshape(shape)
-
-    predictor = _compile_lightgbm_model(
-        model_path=model_path,
-        libname=f"agaricus_{objective}",
-        prefix=tmpdir,
-        toolchain=toolchain,
-        params={},
-        verbose=True,
-    )
-    dmat = tl2cgen.DMatrix(
-        load_svmlight_file(dtest_path, zero_based=True)[0], dtype="float64"
-    )
-
-    out_prob = predictor.predict(dmat)
-    np.testing.assert_almost_equal(out_prob, expected_prob, decimal=5)
-    out_margin = predictor.predict(dmat, pred_margin=True)
-    np.testing.assert_almost_equal(out_margin, expected_margin, decimal=5)
+        libpath = pathlib.Path(tmpdir) / (f"lgb_binary_{objective}" + _libext())
+        tl2cgen.export_lib(
+            tl_model,
+            toolchain=toolchain,
+            libpath=libpath,
+            params={"parallel_comp": tl_model.num_tree},
+            verbose=True,
+        )
+        predictor = tl2cgen.Predictor(libpath)
+        dtest = tl2cgen.DMatrix(X_pred)
+        out_prob = predictor.predict(dtest)
+        out_margin = predictor.predict(dtest, pred_margin=True)
+        np.testing.assert_almost_equal(out_prob, expected_prob, decimal=5)
+        np.testing.assert_almost_equal(out_margin, expected_margin, decimal=5)
 
 
 @pytest.mark.parametrize("toolchain", os_compatible_toolchains())
