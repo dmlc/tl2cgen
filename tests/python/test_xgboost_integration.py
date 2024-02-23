@@ -135,9 +135,7 @@ def test_xgb_regression(
         np.testing.assert_array_equal(predictor.num_class, [1])
         dmat = tl2cgen.DMatrix(X_pred, dtype="float32")
         out_pred = predictor.predict(dmat)
-        expected_pred = bst.predict(
-            xgb.DMatrix(X_pred), strict_shape=True, validate_features=False
-        )[:, :, np.newaxis]
+        expected_pred = treelite.gtil.predict(model, X_pred)
         np.testing.assert_almost_equal(out_pred, expected_pred, decimal=3)
 
 
@@ -210,19 +208,7 @@ def test_xgb_multiclass_classifier(
         np.testing.assert_array_equal(predictor.num_class, [num_class])
         dtest = tl2cgen.DMatrix(X_pred, dtype="float32")
         out_pred = predictor.predict(dtest, pred_margin=pred_margin)
-
-        if objective == "multi:softmax" and not pred_margin:
-            out_pred = np.argmax(out_pred, axis=2)
-            expected_pred = bst.predict(
-                xgb.DMatrix(X_pred), strict_shape=True, validate_features=False
-            )
-        else:
-            expected_pred = bst.predict(
-                xgb.DMatrix(X_pred),
-                strict_shape=True,
-                output_margin=pred_margin,
-                validate_features=False,
-            )[:, np.newaxis, :]
+        expected_pred = treelite.gtil.predict(model, X_pred, pred_margin=pred_margin)
 
         np.testing.assert_almost_equal(out_pred, expected_pred, decimal=5)
 
