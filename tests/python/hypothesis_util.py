@@ -1,13 +1,18 @@
 """Utility functions for hypothesis-based testing"""
 
-# pylint: disable=differing-param-doc,missing-type-doc
-
+from math import ceil
 from sys import platform as _platform
 
 import numpy as np
 from hypothesis import assume
 from hypothesis.strategies import composite, integers, just, none
-from sklearn.datasets import make_classification, make_regression
+from sklearn.datasets import (
+    make_classification,
+    make_multilabel_classification,
+    make_regression,
+)
+
+# pylint: disable=differing-param-doc,missing-type-doc
 
 
 def _get_limits(strategy):
@@ -262,6 +267,64 @@ def standard_regression_datasets(
         shuffle=draw(shuffle),
         random_state=random_state,
     )
+    return X.astype(np.float32), y.astype(np.float32)
+
+
+@composite
+def standard_multi_target_binary_classification_datasets(
+    draw,
+    n_samples=integers(min_value=100, max_value=200),
+    n_features=integers(min_value=100, max_value=200),
+    n_targets=just(5),
+    *,
+    n_pos_labels=None,
+    random_state=None,
+):
+    """
+    Returns a strategy to generate datasets for multi-target binary classification,
+    where each target is associated with a binary class label.
+    Note:
+    This function uses the sklearn.datasets.make_multilabel_classification function to
+    generate the regression problem from the provided search strategies.
+
+    Parameters
+    ----------
+    draw:
+        Callback function, to be used internally by Hypothesis
+    n_samples: SearchStrategy[int]
+        A search strategy for the number of samples in the X array
+    n_features: SearchStrategy[int]
+        A search strategy for the total number of features in the X array
+    n_targets: SearchStrategy[int], default=just(5)
+        A search strategy for the number of targets in the y array.
+    n_pos_labels: SearchStrategy[int], default=None
+        A search strategy for the expected number of positive class labels per sample.
+        If None, n_pos_labels will be set to ceil(0.4 * n_targets).
+    random_state: int, RandomState instance or None, default=None
+        Pass a random state or integer to determine the random number
+        generation for data set generation.
+    Returns
+    -------
+    (X, y):  SearchStrategy[array], SearchStrategy[array]
+        A tuple of search strategies for arrays subject to the constraints of
+        the provided parameters.
+    """
+    n_targets_ = draw(n_targets)
+    if n_pos_labels is None:
+        n_pos_labels = just(int(ceil(0.4 * n_targets_)))
+    ret = make_multilabel_classification(
+        n_samples=draw(n_samples),
+        n_features=draw(n_features),
+        n_classes=draw(n_targets),
+        n_labels=draw(n_pos_labels),
+        length=50,
+        allow_unlabeled=True,
+        sparse=False,
+        return_indicator="dense",
+        return_distributions=False,
+        random_state=random_state,
+    )
+    X, y = ret[0], ret[1]
     return X.astype(np.float32), y.astype(np.float32)
 
 
