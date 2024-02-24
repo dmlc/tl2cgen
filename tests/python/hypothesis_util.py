@@ -332,7 +332,7 @@ def standard_settings():
     """Default hypothesis settings. Set a smaller max_examples on Windows"""
     kwargs = {
         "deadline": None,
-        "max_examples": 20,
+        "max_examples": 40,
         "print_blob": True,
     }
     if _platform == "win32":
