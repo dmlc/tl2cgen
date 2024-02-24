@@ -4,7 +4,6 @@ import pathlib
 import tempfile
 
 import pytest
-from sklearn.datasets import load_svmlight_file
 
 import tl2cgen
 
@@ -14,6 +13,11 @@ from .metadata import example_model_db, load_example_model
 @pytest.fixture(scope="session")
 def annotation():
     """Pre-computed branch annotation information for example datasets"""
+    try:
+        from sklearn.datasets import load_svmlight_file
+    except ImportError:
+        pytest.skip(reason="scikit-learn is required")
+
     with tempfile.TemporaryDirectory(dir=".") as tmpdir:
 
         def compute_annotation(dataset):
