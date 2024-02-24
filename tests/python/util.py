@@ -11,7 +11,6 @@ from typing import Any, Iterator, List, Optional, Tuple, Union
 import numpy as np
 import pytest
 import treelite
-from sklearn.datasets import load_svmlight_file
 
 import tl2cgen
 from tl2cgen.contrib.util import _libext
@@ -63,6 +62,11 @@ def has_pandas():
 
 def check_predictor(predictor: tl2cgen.Predictor, dataset: str) -> None:
     """Check whether a predictor produces correct predictions for a given dataset"""
+    try:
+        from sklearn.datasets import load_svmlight_file
+    except ImportError:
+        pytest.skip("scikit-learn is required")
+
     dmat = tl2cgen.DMatrix(
         load_svmlight_file(example_model_db[dataset].dtest, zero_based=True)[0],
         dtype=example_model_db[dataset].dtype,
@@ -76,6 +80,11 @@ def check_predictor_output(
     dataset: str, out_margin: np.ndarray, out_prob: np.ndarray
 ) -> None:
     """Check whether a predictor produces correct predictions"""
+    try:
+        from sklearn.datasets import load_svmlight_file
+    except ImportError:
+        pytest.skip("scikit-learn is required")
+
     tl_model = load_example_model(dataset)
 
     X_test = load_svmlight_file(example_model_db[dataset].dtest, zero_based=True)[0]

@@ -7,13 +7,29 @@ import pathlib
 import numpy as np
 import pytest
 import treelite
-from hypothesis import assume, given, settings
-from hypothesis.strategies import data as hypothesis_callback
-from hypothesis.strategies import integers, just, sampled_from
-from sklearn.model_selection import train_test_split
 
 import tl2cgen
 from tl2cgen.contrib.util import _libext
+
+try:
+    import xgboost as xgb
+except ImportError:
+    pytest.skip("XGBoost not installed; skipping", allow_module_level=True)
+
+
+try:
+    from hypothesis import assume, given, settings
+    from hypothesis.strategies import data as hypothesis_callback
+    from hypothesis.strategies import integers, just, sampled_from
+except ImportError:
+    pytest.skip("hypothesis not installed; skipping", allow_module_level=True)
+
+
+try:
+    from sklearn.model_selection import train_test_split
+except ImportError:
+    pytest.skip("hypothesis not installed; skipping", allow_module_level=True)
+
 
 from .hypothesis_util import (
     standard_classification_datasets,
@@ -28,12 +44,6 @@ from .util import (
     os_compatible_toolchains,
     to_categorical,
 )
-
-try:
-    import xgboost as xgb
-except ImportError:
-    # skip this test suite if XGBoost is not installed
-    pytest.skip("XGBoost not installed; skipping", allow_module_level=True)
 
 
 def generate_data_for_squared_log_error(n_targets: int = 1):

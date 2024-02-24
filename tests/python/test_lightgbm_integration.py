@@ -9,13 +9,28 @@ import numpy as np
 import pytest
 import scipy.sparse
 import treelite
-from hypothesis import given, settings
-from hypothesis.strategies import data as hypothesis_callback
-from hypothesis.strategies import integers, just, sampled_from
-from sklearn.model_selection import train_test_split
 
 import tl2cgen
 from tl2cgen.contrib.util import _libext
+
+try:
+    import lightgbm
+except ImportError:
+    pytest.skip("LightGBM not installed; skipping", allow_module_level=True)
+
+try:
+    from hypothesis import given, settings
+    from hypothesis.strategies import data as hypothesis_callback
+    from hypothesis.strategies import integers, just, sampled_from
+except ImportError:
+    pytest.skip("hypothesis not installed; skipping", allow_module_level=True)
+
+
+try:
+    from sklearn.model_selection import train_test_split
+except ImportError:
+    pytest.skip("scikit-learn not installed; skipping", allow_module_level=True)
+
 
 from .hypothesis_util import (
     standard_classification_datasets,
@@ -31,12 +46,6 @@ from .util import (
     os_platform,
     to_categorical,
 )
-
-try:
-    import lightgbm
-except ImportError:
-    # skip this test suite if LightGBM is not installed
-    pytest.skip("LightGBM not installed; skipping", allow_module_level=True)
 
 
 def _compile_lightgbm_model(  # pylint: disable=too-many-arguments
