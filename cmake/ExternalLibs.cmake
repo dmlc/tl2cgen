@@ -1,7 +1,8 @@
 include(FetchContent)
 
 # Treelite
-find_package(Treelite 4.1.1)
+set(TREELITE_VERSION 4.1.2)
+find_package(Treelite ${TREELITE_VERSION})
 if (Treelite_FOUND)
   set(TREELITE_FROM_SYSTEM_ROOT TRUE)
   set(TREELITE_LIB treelite::treelite)
@@ -10,7 +11,7 @@ else ()
   FetchContent_Declare(
     treelite
     GIT_REPOSITORY https://github.com/dmlc/treelite.git
-    GIT_TAG 4.1.1
+    GIT_TAG ${TREELITE_VERSION}
   )
   set(Treelite_BUILD_STATIC_LIBS ON)
   FetchContent_MakeAvailable(treelite)
