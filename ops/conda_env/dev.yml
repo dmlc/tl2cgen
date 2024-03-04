@@ -25,3 +25,5 @@ dependencies:
 - pip
 - python-build
 - treelite=4.1.1
+- pip:
+  - cibuildwheel
