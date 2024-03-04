@@ -39,6 +39,7 @@ jobs:
       run: |
         bash ops/test-sdist.sh
   java-test:
+    if: false   # TODO(hcho3): Re-enable when Java runtime is brought up to date
     name: Run Java tests
     runs-on: ubuntu-latest
     steps:
