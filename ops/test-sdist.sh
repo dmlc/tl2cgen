@@ -14,4 +14,4 @@ for file in ./tl2cgen-*.tar.gz
 do
   mv "${file}" "${file%.tar.gz}+${COMMIT_ID}.tar.gz"
 done
-python -m awscli s3 cp tl2cgen-*.tar.gz s3://tl2cgen-wheels/ --acl public-read || true
+python -m awscli s3 cp tl2cgen-*.tar.gz s3://tl2cgen-wheels/ --acl public-read --region us-west-2 || true
