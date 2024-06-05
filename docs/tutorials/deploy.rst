@@ -34,7 +34,7 @@ TL2cgen by running pip:
 
 Once the TL2cgen runtime is installed, it suffices to follow instructions in :doc:`first`.
 
-Option 2: Deploy prediciton code only
+Option 2: Deploy prediction code only
 =====================================
 
 With this option, neither Python nor a C++ compiler is required. You should be
