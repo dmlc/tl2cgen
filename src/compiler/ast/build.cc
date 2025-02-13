@@ -109,7 +109,7 @@ ASTNode* ASTBuilder::BuildASTFromTree(ASTNode* parent,
   } else {
     if (tree.NodeType(nid) == treelite::TreeNodeType::kNumericalTestNode) {
       ast_node = AddNode<NumericalConditionNode>(parent, tree.SplitIndex(nid),
-          tree.DefaultLeft(nid), tree.ComparisonOp(nid), tree.Threshold(nid), std::nullopt);
+          tree.DefaultLeft(nid), tree.ComparisonOp(nid), tree.Threshold(nid), std::nullopt, thresh_as_int);
     } else {
       ast_node = AddNode<CategoricalConditionNode>(parent, tree.SplitIndex(nid),
           tree.DefaultLeft(nid), tree.CategoryList(nid), tree.CategoryListRightChild(nid));

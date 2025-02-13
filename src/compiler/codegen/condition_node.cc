@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <string>
+#include <iostream>
 
 using namespace fmt::literals;
 
@@ -46,6 +47,14 @@ std::string double_to_bin(double number) {
     return ss.str();
 }
 
+std::string getOppositeOperator(const std::string& op) {
+    if (op == "<") return ">=";
+    else if (op == ">") return "<=";
+    else if (op == "<=") return ">";
+    else if (op == ">=") return "<";
+    else return "";  // unknown operator
+}
+
 std::string thresh_as_int(const std::string& threshold_type, ast::NumericalConditionNode const* node) {
       std::string negatstring = "";
       float splitval = std::get<float>(node->threshold_);
@@ -63,14 +72,6 @@ std::string thresh_as_int(const std::string& threshold_type, ast::NumericalCondi
       +negatstring+")"+op+"(("+new_dtype+")("+split_val_bin+"))";
 }
 
-std::string getOppositeOperator(const std::string& op) {
-    if (op == "<") return ">=";
-    else if (op == ">") return "<=";
-    else if (op == "<=") return ">";
-    else if (op == ">=") return "<";
-    else return "";  // unknown operator
-}
-
 inline std::string ExtractNumericalCondition(ast::NumericalConditionNode const* node) {
   std::string const threshold_type = codegen::GetThresholdCType(node);
   std::string result;
@@ -81,8 +82,8 @@ inline std::string ExtractNumericalCondition(ast::NumericalConditionNode const* 
   } else if (node->thresh_as_int_) { // Threshold as integer
     if (!(threshold_type == "float" || threshold_type == "double")) { // Only float and double are supported
       throw std::runtime_error("Invalid threshold type.");
+    }
     result = thresh_as_int(threshold_type, node);
-  }
   } else {
     result = std::visit(
         [&](auto&& threshold) -> std::string {
