@@ -33,7 +33,7 @@ class ASTBuilder {
   ASTBuilder() : main_node_(nullptr) {}
 
   /* \brief Initially build AST from model */
-  void BuildAST(treelite::Model const& model);
+  void BuildAST(treelite::Model const& model, bool thresh_as_int);
   /* \brief Generate is_categorical[] array, which tells whether each feature
             is categorical or numerical */
   void GenerateIsCategoricalArray();
@@ -69,7 +69,7 @@ class ASTBuilder {
   template <typename ThresholdType, typename LeafOutputType>
   ASTNode* BuildASTFromTree(ASTNode* parent,
       treelite::Tree<ThresholdType, LeafOutputType> const& tree, int tree_id,
-      std::int32_t target_id, std::int32_t class_id, int nid);
+      std::int32_t target_id, std::int32_t class_id, int nid, bool thresh_as_int);
 
   // Keep tract of all nodes built so far, to prevent memory leak
   std::vector<std::unique_ptr<ASTNode>> nodes_;

@@ -32,6 +32,8 @@ struct CompilerParam {
              compilation time and reduce memory consumption during
              compilation. */
   int parallel_comp{0};
+  /*! \brief Wether to interpret threshold points as integers (0: no, >0: yes) */
+  bool thresh_as_int{false};
   /*! \brief If >0, produce extra messages */
   int verbose{0};
   /*! \brief Native lib name (without extension) */
