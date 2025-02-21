@@ -17,6 +17,8 @@ def py_str(string):
     """Convert C string back to Python string"""
     return string.decode("utf-8")
 
+def check_if_fast():
+    return True
 
 def _open_and_validate_recipe(recipe_path: pathlib.Path) -> Dict[str, Any]:
     """Ensure that the build recipe contains necessary fields"""
