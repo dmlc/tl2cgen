@@ -28,6 +28,11 @@ namespace detail {
 
 class SharedLibrary;
 
+template <typename ElementType>
+struct MissingValue { using type = int; };
+template <>
+struct MissingValue<double> { using type = long; };
+
 /*!
  * \brief Data layout. The value -1 signifies the missing value.
  *        When the "missing" field is set to -1, the "fvalue" field is set to
@@ -36,7 +41,7 @@ class SharedLibrary;
  */
 template <typename ElementType>
 union Entry {
-  int missing;
+  typename MissingValue<ElementType>::type missing;
   ElementType fvalue;
 };
 

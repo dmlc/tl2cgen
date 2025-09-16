@@ -71,7 +71,7 @@ char const* const header_template =
 #define MAX_N_CLASS {max_num_class}
 
 union Entry {{
-  int missing;
+  {missing_ctype} missing;
   {threshold_ctype} fvalue;
   int qvalue;
 }};
@@ -119,11 +119,13 @@ void HandleMainNode(ast::MainNode const* node, CodeCollection& gencode) {
   std::int32_t const num_target = node->meta_->num_target_;
   std::vector<std::int32_t>& num_class = node->meta_->num_class_;
   std::int32_t const max_num_class = *std::max_element(num_class.begin(), num_class.end());
+  const std::string missing_ctype_str = (threshold_ctype_str == "double" ? "long" : "int");
 
   gencode.SwitchToSourceFile("header.h");
   gencode.PushFragment(fmt::format(header_template, "threshold_ctype"_a = threshold_ctype_str,
       "leaf_output_ctype"_a = leaf_output_ctype_str, "dllexport"_a = DLLEXPORT_KEYWORD,
-      "num_target"_a = num_target, "max_num_class"_a = max_num_class));
+      "num_target"_a = num_target, "max_num_class"_a = max_num_class,
+      "missing_ctype"_a = missing_ctype_str));
 
   gencode.SwitchToSourceFile("main.c");
   gencode.PushFragment(fmt::format(main_start_template,
