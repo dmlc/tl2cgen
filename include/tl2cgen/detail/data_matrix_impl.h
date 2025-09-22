@@ -30,6 +30,7 @@ class DenseDMatrix {
         missing_value_{missing_value},
         num_row_{num_row},
         num_col_{num_col} {}
+
   DenseDMatrix(
       void const* data, void const* missing_value, std::uint64_t num_row, std::uint64_t num_col)
       : missing_value_{*static_cast<ElementType const*>(missing_value)},
@@ -37,8 +38,13 @@ class DenseDMatrix {
         num_col_{num_col} {
     auto const* data_ptr = static_cast<ElementType const*>(data);
     std::uint64_t const num_elem = num_row * num_col;
-    data_ = std::vector<ElementType>{data_ptr, data_ptr + num_elem};
+    data_.reserve(num_elem);
+    #pragma omp parallel for
+    for (std::uint64_t i = 0; i < num_elem; ++i) {
+      data_[i] = data_ptr[i];
+    }
   }
+  
   DenseDMatrix(
       void const*, std::uint32_t const*, std::uint64_t const*, std::uint64_t, std::uint64_t) {
     TL2CGEN_LOG(FATAL) << "Invalid set of arguments";
