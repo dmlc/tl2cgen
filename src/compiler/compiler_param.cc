@@ -26,6 +26,10 @@ CompilerParam CompilerParam::ParseFromJSON(char const* param_json_str) {
       TL2CGEN_CHECK(e.value.IsInt()) << "Expected an integer for 'quantize'";
       param.quantize = e.value.GetInt();
       TL2CGEN_CHECK_GE(param.quantize, 0) << "'quantize' must be 0 or greater";
+    } else if (key == "thresh_as_int") {
+      TL2CGEN_CHECK(e.value.IsInt()) << "Expected an integer for 'thresh_as_int'";
+      param.thresh_as_int = e.value.GetInt();
+      TL2CGEN_CHECK_GE(param.quantize, 0) << "'thresh_as_int' must be 0 or greater";
     } else if (key == "parallel_comp") {
       TL2CGEN_CHECK(e.value.IsInt()) << "Expected an integer for 'parallel_comp'";
       param.parallel_comp = e.value.GetInt();
